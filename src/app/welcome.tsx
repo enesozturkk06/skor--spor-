@@ -7,6 +7,7 @@ import { AppText, Button, Icon, Logo, Screen, type IconName } from '@/components
 import { useAuth } from '@/features/auth/AuthProvider';
 import { SessionExpiredNotice } from '@/features/auth/components/SessionExpiredNotice';
 import { colors, radius, spacing } from '@/theme';
+import { useSvgId } from '@/components/ui/useSvgId';
 
 const PILLARS: { icon: IconName; label: string }[] = [
   { icon: 'lightning-bolt', label: 'Antrenman' },
@@ -19,27 +20,28 @@ const useNativeDriver = Platform.OS !== 'web';
 
 /** Large forward-leaning "score lines" — the brand's motion motif. */
 function ScoreLines({ width }: { width: number }) {
+  const svgId = useSvgId('lines');
   const h = Math.min(520, width * 1.1);
   return (
     <View pointerEvents="none" style={[styles.lines, { height: h }]} importantForAccessibility="no-hide-descendants">
       <Svg width="100%" height="100%" viewBox="0 0 400 520" preserveAspectRatio="xMidYMid slice">
         <Defs>
-          <LinearGradient id="lineOrange" x1="0" y1="0" x2="0" y2="1">
+          <LinearGradient id={svgId('lineOrange')} x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0" stopColor={colors.orange} stopOpacity={0.9} />
             <Stop offset="1" stopColor={colors.orange} stopOpacity={0} />
           </LinearGradient>
-          <LinearGradient id="lineGold" x1="0" y1="0" x2="0" y2="1">
+          <LinearGradient id={svgId('lineGold')} x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0" stopColor={colors.gold} stopOpacity={0.6} />
             <Stop offset="1" stopColor={colors.gold} stopOpacity={0} />
           </LinearGradient>
-          <LinearGradient id="linePetrol" x1="0" y1="0" x2="0" y2="1">
+          <LinearGradient id={svgId('linePetrol')} x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0" stopColor={colors.petrolBright} stopOpacity={0.9} />
             <Stop offset="1" stopColor={colors.petrol} stopOpacity={0} />
           </LinearGradient>
         </Defs>
-        <Path d="M250 -20 L330 -20 L170 540 L90 540 Z" fill="url(#linePetrol)" />
-        <Path d="M340 -20 L372 -20 L212 540 L180 540 Z" fill="url(#lineOrange)" />
-        <Path d="M392 -20 L408 -20 L248 540 L232 540 Z" fill="url(#lineGold)" />
+        <Path d="M250 -20 L330 -20 L170 540 L90 540 Z" fill={`url(#${svgId('linePetrol')})`} />
+        <Path d="M340 -20 L372 -20 L212 540 L180 540 Z" fill={`url(#${svgId('lineOrange')})`} />
+        <Path d="M392 -20 L408 -20 L248 540 L232 540 Z" fill={`url(#${svgId('lineGold')})`} />
       </Svg>
     </View>
   );

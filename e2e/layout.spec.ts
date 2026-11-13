@@ -19,6 +19,18 @@ test.describe('Responsive yerleşim', () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test('üst üste açılan ekranlarda SVG kimlikleri benzersiz (logo ve arka plan boyanır)', async ({ app, page }) => {
+    // Sign-in is pushed over the still-mounted welcome screen: two logos, two backdrops.
+    await app.openSignIn();
+    const duplicates = await page.evaluate(() => {
+      const seen = new Map<string, number>();
+      document.querySelectorAll('svg [id]').forEach((el) => seen.set(el.id, (seen.get(el.id) ?? 0) + 1));
+      return [...seen].filter(([, n]) => n > 1).map(([id]) => id);
+    });
+    expect(duplicates, 'duplicate SVG ids break url(#id) gradients').toEqual([]);
+    expect(await page.locator('svg linearGradient, svg radialGradient').count()).toBeGreaterThan(3);
+  });
+
   test('alt menü her ekran genişliğinde görünür ve 5 sekme içerir', async ({ app, page }) => {
     await app.onboardedUser();
     await expect(page.getByRole('tab')).toHaveCount(5);

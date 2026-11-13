@@ -4,27 +4,29 @@ import Svg, { Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import { colors, fonts } from '@/theme';
 
 import { AppText } from './AppText';
+import { useSvgId } from './useSvgId';
 
 /**
  * SKOR SPOR monogram: two forward-leaning "score lines" (momentum)
  * inside a petrol tile. Orange = effort, gold = achievement.
  */
 export function LogoMark({ size = 48 }: { size?: number }) {
+  const svgId = useSvgId('mark');
   return (
     <Svg width={size} height={size} viewBox="0 0 48 48" accessibilityLabel="SKOR SPOR">
       <Defs>
-        <LinearGradient id="markTile" x1="0" y1="0" x2="1" y2="1">
+        <LinearGradient id={svgId('markTile')} x1="0" y1="0" x2="1" y2="1">
           <Stop offset="0" stopColor={colors.petrolBright} />
           <Stop offset="1" stopColor={colors.petrolDeep} />
         </LinearGradient>
-        <LinearGradient id="markOrange" x1="0" y1="0" x2="0" y2="1">
+        <LinearGradient id={svgId('markOrange')} x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor={colors.orange} />
           <Stop offset="1" stopColor={colors.orangeDeep} />
         </LinearGradient>
       </Defs>
-      <Rect x="0" y="0" width="48" height="48" rx="13" fill="url(#markTile)" />
+      <Rect x="0" y="0" width="48" height="48" rx="13" fill={`url(#${svgId('markTile')})`} />
       <Rect x="0.75" y="0.75" width="46.5" height="46.5" rx="12.25" fill="none" stroke={colors.gold} strokeOpacity={0.35} strokeWidth={1.5} />
-      <Path d="M17 37 L25 11 L32 11 L24 37 Z" fill="url(#markOrange)" />
+      <Path d="M17 37 L25 11 L32 11 L24 37 Z" fill={`url(#${svgId('markOrange')})`} />
       <Path d="M27 37 L31 24 L37 24 L33 37 Z" fill={colors.gold} />
       <Path d="M11 37 L13 30 L19 30 L17 37 Z" fill={colors.text} fillOpacity={0.9} />
     </Svg>
