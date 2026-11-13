@@ -52,7 +52,8 @@
     "serve:web": "node scripts/serve-web.mjs",
     "test:live": "playwright test -c playwright.live.config.ts",
     "db:status": "supabase migration list --remote",
-    "db:push:dry": "supabase db push --remote --dry-run"
+    "db:push:dry": "supabase db push --remote --dry-run",
+    "test:e2e:supabase": "playwright test --project=supabase-mock"
   },
   "private": true
 }

@@ -6,6 +6,7 @@ import { AppText, Button, TextField } from '@/components/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { AuthShell } from '@/features/auth/components/AuthShell';
 import { FormError } from '@/features/auth/components/FormError';
+import { SessionExpiredNotice } from '@/features/auth/components/SessionExpiredNotice';
 import { validate } from '@/lib/validation';
 
 export default function SignInScreen() {
@@ -17,6 +18,7 @@ export default function SignInScreen() {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{ email?: string | null; password?: string | null }>({});
   const [formError, setFormError] = useState<string | null>(null);
+  const [unconfirmed, setUnconfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const submit = async () => {
@@ -24,6 +26,7 @@ export default function SignInScreen() {
     const next = { email: validate.email(email), password: password ? null : 'Şifre gerekli.' };
     setErrors(next);
     setFormError(null);
+    setUnconfirmed(false);
     if (next.email || next.password) return;
 
     setSubmitting(true);
@@ -31,6 +34,7 @@ export default function SignInScreen() {
     // On success the root navigator re-routes automatically via its guards.
     if (!result.ok) {
       setFormError(result.error);
+      setUnconfirmed(result.code === 'email_not_confirmed');
       setSubmitting(false);
     }
   };
@@ -48,7 +52,17 @@ export default function SignInScreen() {
         </AppText>
       }
     >
+      <SessionExpiredNotice />
       <FormError message={formError} />
+      {unconfirmed ? (
+        <Button
+          label="Doğrulama e-postasını tekrar gönder"
+          variant="secondary"
+          icon="email-sync-outline"
+          size="md"
+          onPress={() => router.push({ pathname: '/verify-email', params: { email: email.trim() } })}
+        />
+      ) : null}
       <TextField
         label="E-posta"
         icon="email-outline"

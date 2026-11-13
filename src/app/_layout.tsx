@@ -15,6 +15,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { LogoMark } from '@/components/ui';
 import { AthleteProvider, useAthlete } from '@/features/athlete/AthleteProvider';
+import { ProfileLoadError } from '@/features/athlete/components/ProfileLoadError';
 import { AuthProvider, useAuth } from '@/features/auth/AuthProvider';
 import { colors } from '@/theme';
 
@@ -60,7 +61,7 @@ function BootScreen() {
 
 function RootNavigator() {
   const { user, initializing } = useAuth();
-  const { profile, loading } = useAthlete();
+  const { profile, loading, loadError } = useAthlete();
   const ready = !initializing && !loading;
 
   useEffect(() => {
@@ -73,6 +74,9 @@ function RootNavigator() {
   const signedIn = Boolean(user);
   const onboarded = Boolean(profile);
 
+  // Unknown profile state (offline, nothing cached): never guess between onboarding and dashboard.
+  if (signedIn && loadError) return <ProfileLoadError message={loadError} />;
+
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg }, animation: 'fade' }}>
       {/* Each group declares where a blocked visitor lands, so deep links resolve predictably. */}
@@ -80,7 +84,11 @@ function RootNavigator() {
         <Stack.Screen name="welcome" />
         <Stack.Screen name="sign-in" options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="sign-up" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="verify-email" options={{ animation: 'slide_from_right' }} />
       </Stack.Protected>
+
+      {/* Email-link landing page: reachable in every state, it hands over to the guards itself. */}
+      <Stack.Screen name="auth/callback" />
 
       <Stack.Protected guard={signedIn && !onboarded} redirectTo={signedIn ? '/' : '/welcome'}>
         <Stack.Screen name="onboarding" />

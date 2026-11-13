@@ -24,6 +24,7 @@ Uçtan uca testler [e2e/](e2e/) klasöründe, Playwright ile yazıldı. Testler 
 | --- | --- |
 | `npm test` | Tüm testler (mobil + masaüstü yerleşim) |
 | `npm run test:e2e:mobile` | Yalnızca mobil (Pixel 7) proje |
+| `npm run test:e2e:supabase` | Supabase modu: kayıt, e-posta doğrulama, oturum, profil (sahte API ile) |
 | `npm run test:e2e:ui` | Etkileşimli Playwright arayüzü |
 | `npm run test:e2e:report` | Son çalıştırmanın HTML raporu |
 
@@ -55,6 +56,14 @@ Gerçek backend'e geçmek için:
 
    Migration'lar `supabase/migrations/<zaman damgası>_<ad>.sql` biçimindedir, tekrar çalıştırılabilir ve tek işlem (transaction) içinde uygulanır.
 3. Uygulamayı yeniden başlatın. Kimlik doğrulama ve profil senkronizasyonu otomatik olarak Supabase'e geçer.
+4. E-posta doğrulama bağlantıları uygulamanın `/auth/callback` ekranına döner. Supabase panelinde **Authentication → URL Configuration → Redirect URLs** listesine kullandığınız adresleri ekleyin; listede olmayan adres için Supabase **Site URL**'ye yönlendirir:
+   - Web geliştirme: `http://localhost:8081/auth/callback`
+   - Uygulama (geliştirme / yayın build'i): `skorspor://auth/callback`
+   - Expo Go: terminalde görünen `exp://…/--/auth/callback` adresi
+
+**Mod ayrımı:** Arka uç modu build sırasında `.env`'den belirlenir (`src/lib/backend.ts`) ve çalışırken değişmez. Cihazdaki önbellek anahtarları moda göre ayrılır; Supabase modunda sunucu tek doğruluk kaynağıdır ve çıkışta cihazdaki profil kopyası silinir.
+
+**E2E testleri ve Supabase:** `npm test` iki build üretir (`scripts/e2e-build.mjs`); ikisi de `.env` okumaz. Supabase modu testleri asla çözümlenmeyen `https://skor-e2e.invalid` adresine karşı çalışır ve tarayıcı içinde `e2e/supabase-mode/mock-supabase.ts` ile yanıtlanır; gerçek bir `*.supabase.co` isteği testi düşürür.
 
 ### Canlı güvenlik testleri
 

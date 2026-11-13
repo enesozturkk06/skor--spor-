@@ -44,6 +44,8 @@ export const colors = {
   // Feedback
   success: '#4FD1A1',
   warning: '#F2C14E',
+  warningSoft: 'rgba(242,193,78,0.10)',
+  warningBorder: 'rgba(242,193,78,0.35)',
   danger: '#FF5A5F',
   dangerSoft: 'rgba(255,90,95,0.12)',
 

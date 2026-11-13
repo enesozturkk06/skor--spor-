@@ -1,19 +1,24 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { useAuth } from '@/features/auth/AuthProvider';
 
-import { profileRepository } from './profile-repository';
+import { profileRepository, type ProfileLoadResult } from './profile-repository';
 import type { AthleteProfile, AthleteProfileInput } from './types';
 
 type AthleteContextValue = {
   profile: AthleteProfile | null;
   /** True while the profile for the current user is being loaded. */
   loading: boolean;
+  /** Loading failed and there is nothing to show (offer retry). */
+  loadError: string | null;
+  /** Showing the device copy because the backend was unreachable. */
+  stale: boolean;
+  reload: () => void;
   saveProfile: (input: AthleteProfileInput) => Promise<AthleteProfile>;
 };
 
-/** Profile state is tagged with the user it belongs to, so a stale profile never leaks across accounts. */
-type Loaded = { userId: string; profile: AthleteProfile | null };
+/** Results are tagged with the user they belong to, so nothing leaks across accounts. */
+type Loaded = { userId: string; result: ProfileLoadResult };
 
 const AthleteContext = createContext<AthleteContextValue | null>(null);
 
@@ -21,26 +26,40 @@ export function AthleteProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const userId = user?.id ?? null;
   const [loaded, setLoaded] = useState<Loaded | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const previousUserId = useRef<string | null>(null);
+
+  // Signing out (or an expired session) removes the previous athlete's device copy.
+  useEffect(() => {
+    const prev = previousUserId.current;
+    if (prev && prev !== userId) void profileRepository.clearCache(prev);
+    previousUserId.current = userId;
+  }, [userId]);
 
   useEffect(() => {
     if (!userId) return;
     let active = true;
     profileRepository
       .load(userId)
-      .catch((error) => {
+      .catch((error): ProfileLoadResult => {
         console.warn('[profile] load failed', error);
-        return null;
+        return { status: 'error', message: 'Profil yüklenemedi. Lütfen tekrar dene.' };
       })
-      .then((profile) => {
-        if (active) setLoaded({ userId, profile });
+      .then((result) => {
+        if (active) setLoaded({ userId, result });
       });
     return () => {
       active = false;
     };
-  }, [userId]);
+  }, [userId, attempt]);
 
-  const current = loaded && loaded.userId === userId ? loaded : null;
-  const profile = current?.profile ?? null;
+  const current = loaded && loaded.userId === userId ? loaded.result : null;
+  const profile = current && current.status !== 'error' ? current.profile : null;
+
+  const reload = useCallback(() => {
+    setLoaded(null);
+    setAttempt((n) => n + 1);
+  }, []);
 
   const saveProfile = useCallback(
     async (input: AthleteProfileInput) => {
@@ -52,15 +71,22 @@ export function AthleteProvider({ children }: { children: ReactNode }) {
         createdAt: profile?.createdAt ?? now,
         updatedAt: now,
       });
-      setLoaded({ userId, profile: saved });
+      setLoaded({ userId, result: { status: 'ok', profile: saved } });
       return saved;
     },
     [userId, profile?.createdAt],
   );
 
   const value = useMemo<AthleteContextValue>(
-    () => ({ profile, loading: Boolean(userId) && !current, saveProfile }),
-    [profile, userId, current, saveProfile],
+    () => ({
+      profile,
+      loading: Boolean(userId) && !current,
+      loadError: current?.status === 'error' ? current.message : null,
+      stale: current?.status === 'stale',
+      reload,
+      saveProfile,
+    }),
+    [profile, userId, current, reload, saveProfile],
   );
 
   return <AthleteContext.Provider value={value}>{children}</AthleteContext.Provider>;

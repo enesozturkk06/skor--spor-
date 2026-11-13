@@ -4,6 +4,7 @@ import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useTabBarClearance } from '@/components/navigation/TabBar';
 import { Screen, SectionHeader } from '@/components/ui';
 import { useAthlete } from '@/features/athlete/AthleteProvider';
+import { StaleProfileNotice } from '@/features/athlete/components/StaleProfileNotice';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { DailyGoalCard } from '@/features/dashboard/components/DailyGoalCard';
 import { DashboardHeader } from '@/features/dashboard/components/DashboardHeader';
@@ -63,6 +64,7 @@ export default function HomeScreen() {
     <Screen edges={['top', 'left', 'right']} bottomInset={clearance}>
       <View style={styles.stack}>
         <DashboardHeader name={user.displayName} primarySport={profile.primarySport} />
+        <StaleProfileNotice />
         {snapshot.isSample ? <SampleDataNotice /> : null}
 
         {wide ? (

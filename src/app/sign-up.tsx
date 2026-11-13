@@ -21,7 +21,6 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<Errors>({});
   const [formError, setFormError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const submit = async () => {
@@ -29,18 +28,17 @@ export default function SignUpScreen() {
     const next: Errors = { name: validate.name(name), email: validate.email(email), password: validate.password(password) };
     setErrors(next);
     setFormError(null);
-    setNotice(null);
     if (next.name || next.email || next.password) return;
 
     setSubmitting(true);
     const result = await signUp(name, email, password);
+    setSubmitting(false);
     if (!result.ok) {
       setFormError(result.error);
     } else if (result.needsEmailConfirmation) {
-      setNotice('Doğrulama bağlantısı e-postana gönderildi. Onayladıktan sonra giriş yapabilirsin.');
+      router.replace({ pathname: '/verify-email', params: { email: email.trim() } });
     }
-    // Successful sign-in with a session → guards route to onboarding.
-    setSubmitting(false);
+    // Successful sign-up with a session → guards route to onboarding.
   };
 
   return (
@@ -62,7 +60,6 @@ export default function SignUpScreen() {
       }
     >
       <FormError message={formError} />
-      <FormError message={notice} tone="success" />
       <TextField
         label="Ad Soyad"
         icon="account-outline"

@@ -5,6 +5,7 @@ import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 
 import { AppText, Button, Icon, Logo, Screen, type IconName } from '@/components/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
+import { SessionExpiredNotice } from '@/features/auth/components/SessionExpiredNotice';
 import { colors, radius, spacing } from '@/theme';
 
 const PILLARS: { icon: IconName; label: string }[] = [
@@ -71,6 +72,9 @@ export default function WelcomeScreen() {
       <View style={styles.container}>
         <Animated.View style={[styles.top, rise(intro, 12)]}>
           <Logo size="md" />
+          <View style={styles.notice}>
+            <SessionExpiredNotice />
+          </View>
         </Animated.View>
 
         <Animated.View style={[styles.hero, rise(intro)]}>
@@ -116,6 +120,7 @@ const styles = StyleSheet.create({
   lines: { position: 'absolute', top: 0, right: 0, left: 0, opacity: 0.55 },
   container: { flex: 1, justifyContent: 'space-between', paddingBottom: spacing.lg },
   top: { paddingTop: spacing.sm },
+  notice: { marginTop: spacing.lg },
   hero: { gap: spacing.lg },
   kicker: { marginBottom: -spacing.xs },
   lead: { maxWidth: 380 },

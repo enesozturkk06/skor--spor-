@@ -3,18 +3,24 @@ import { defineConfig, devices } from '@playwright/test';
 /**
  * SKOR SPOR end-to-end tests.
  *
- * Tests run against the production web build (`expo export` + scripts/serve-web.mjs),
+ * Tests run against production web builds (`expo export` + scripts/serve-web.mjs),
  * so they exercise what real users get rather than the dev server.
  * Every test gets a fresh browser context = empty storage = isolated user.
+ *
+ * Two builds, both made by scripts/e2e-build.mjs and NEITHER reading .env:
+ *   - demo build          → projects "mobile" and "desktop"
+ *   - Supabase-mock build → project "supabase-mock"; its backend URL is a
+ *     never-resolving .invalid host answered by e2e/supabase-mode/mock-supabase.ts
+ * The real Supabase project is only ever touched by `npm run test:live`.
  */
-const PORT = Number(process.env.E2E_PORT ?? 8123);
-const baseURL = `http://localhost:${PORT}`;
+const DEMO_PORT = Number(process.env.E2E_PORT ?? 8123);
+const MOCK_PORT = DEMO_PORT + 2;
 const isCI = Boolean(process.env.CI);
+
+const notHere = ['**/live/**', '**/supabase-mode/**'];
 
 export default defineConfig({
   testDir: './e2e',
-  // Live Supabase checks run only via `npm run test:live` (playwright.live.config.ts).
-  testIgnore: ['**/live/**'],
   outputDir: './test-results',
   fullyParallel: true,
   forbidOnly: isCI,
@@ -24,31 +30,32 @@ export default defineConfig({
   expect: { timeout: 15_000 },
   reporter: [['list'], ['html', { open: 'never', outputFolder: 'playwright-report' }]],
   use: {
-    baseURL,
     locale: 'tr-TR',
     timezoneId: 'Europe/Istanbul',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'mobile', use: { ...devices['Pixel 7'] } },
+    { name: 'mobile', testIgnore: notHere, use: { ...devices['Pixel 7'], baseURL: `http://localhost:${DEMO_PORT}` } },
     {
       name: 'desktop',
-      use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
       // Full flows run on mobile; desktop checks responsive layout only.
       testMatch: /layout\.spec\.ts/,
+      testIgnore: notHere,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 }, baseURL: `http://localhost:${DEMO_PORT}` },
+    },
+    {
+      name: 'supabase-mock',
+      testDir: './e2e/supabase-mode',
+      use: { ...devices['Pixel 7'], baseURL: `http://localhost:${MOCK_PORT}` },
     },
   ],
   webServer: {
-    // serve-web.mjs adds the SPA fallback that `expo serve` lacks (refresh on /welcome etc.).
-    command: `npm run build:web && node scripts/serve-web.mjs ${PORT}`,
-    // Never build the test app against the real Supabase project from .env:
-    // tests create accounts and must stay in local demo mode.
-    // (auth.spec "Demo modu" assertion fails if this ever leaks.)
-    env: { EXPO_NO_DOTENV: '1', EXPO_PUBLIC_SUPABASE_URL: '', EXPO_PUBLIC_SUPABASE_ANON_KEY: '' },
-    url: baseURL,
+    // Builds dist/ (demo) and dist-mock/ (Supabase → mock), then serves both with SPA fallback.
+    command: `node scripts/e2e-build.mjs && node scripts/serve-web.mjs ${DEMO_PORT}:dist ${MOCK_PORT}:dist-mock`,
+    url: `http://localhost:${MOCK_PORT}`,
     reuseExistingServer: !isCI,
-    timeout: 300_000,
+    timeout: 420_000,
     stdout: 'ignore',
     stderr: 'pipe',
   },
