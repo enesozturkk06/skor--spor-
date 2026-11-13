@@ -50,3 +50,9 @@ yarn-error.*
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Supabase CLI local state (project ref, pooler URL, branches)
+supabase/.temp/
+supabase/.branches/
+supabase/.env
+supabase/.env.*

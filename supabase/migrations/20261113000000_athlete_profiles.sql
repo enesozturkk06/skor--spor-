@@ -6,6 +6,13 @@
 -- single transaction (all-or-nothing). Contains no DROP TABLE, TRUNCATE or
 -- DELETE, and never modifies auth.users.
 --
+-- Transactions (verified offline with Supabase CLI 3.1.0 `db push` against
+-- PostgreSQL): the CLI already wraps each migration in a transaction, so a
+-- failure rolls everything back and records no history, with or without the
+-- explicit begin/commit below. They are kept so the file stays atomic on
+-- paths that may not add one (SQL Editor, API). If the history row is ever
+-- missed after commit, re-pushing is harmless because the script is idempotent.
+--
 -- Allowed values mirror src/features/athlete/catalog.ts (SPORTS, GOALS,
 -- LIMITS). e2e/unit/migration-catalog.spec.ts fails if they drift apart.
 -- =====================================================================

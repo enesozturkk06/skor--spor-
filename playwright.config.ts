@@ -13,6 +13,8 @@ const isCI = Boolean(process.env.CI);
 
 export default defineConfig({
   testDir: './e2e',
+  // Live Supabase checks run only via `npm run test:live` (playwright.live.config.ts).
+  testIgnore: ['**/live/**'],
   outputDir: './test-results',
   fullyParallel: true,
   forbidOnly: isCI,

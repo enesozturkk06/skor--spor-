@@ -42,9 +42,23 @@ Anahtarlar yoksa uygulama **Demo modunda** çalışır: hesap bilgisi (ad, e-pos
 
 Gerçek backend'e geçmek için:
 
-1. `.env.example` dosyasını `.env` olarak kopyalayın, `EXPO_PUBLIC_SUPABASE_URL` ve `EXPO_PUBLIC_SUPABASE_ANON_KEY` değerlerini girin (yalnızca **anon** anahtar — service-role anahtarı asla istemciye konmaz).
-2. `supabase/migrations/0001_athlete_profiles.sql` dosyasını Supabase SQL editöründe çalıştırın (tablo + RLS politikaları).
+1. `.env.example` dosyasını `.env` olarak kopyalayın, `EXPO_PUBLIC_SUPABASE_URL` ve `EXPO_PUBLIC_SUPABASE_ANON_KEY` değerlerini girin. Buraya yalnızca **publishable** (`sb_publishable_…`) anahtar konur; secret / service_role anahtarı asla istemciye, `.env`'e veya Git'e girmez.
+2. Veritabanı şemasını Supabase CLI ile uygulayın (CLI projeye sabit sürümle eklidir, `npx supabase`):
+
+   ```bash
+   npx supabase login                                   # tarayıcıda onay; token Windows Credential Manager'da saklanır
+   npx supabase link --project-ref <proje-ref>
+   npm run db:push:dry                                  # neyin uygulanacağını gösterir, hiçbir şey değiştirmez
+   npx supabase db push --remote                        # uygular; barındırılan projede onay ister (varsayılan: Hayır)
+   npm run db:status                                    # yerel dosyalar ↔ canlı migration geçmişi
+   ```
+
+   Migration'lar `supabase/migrations/<zaman damgası>_<ad>.sql` biçimindedir, tekrar çalıştırılabilir ve tek işlem (transaction) içinde uygulanır.
 3. Uygulamayı yeniden başlatın. Kimlik doğrulama ve profil senkronizasyonu otomatik olarak Supabase'e geçer.
+
+### Canlı güvenlik testleri
+
+`npm run test:live`: gerçek projeye **yalnızca publishable key** ile bağlanır; kullanıcı oluşturmaz, veri yazmaz. Oturumsuz erişimin engellendiğini, anonim girişin kapalı olduğunu ve API'nin yalnızca beklenen tabloları gösterdiğini doğrular. Tablo henüz yoksa ilgili testler **atlanır** (geçti sayılmaz). `npm test` her zaman çevrimdışı demo modunda çalışır ve canlı projeye dokunmaz.
 
 ## Mimari
 

@@ -11,7 +11,7 @@ import { expect, test } from '@playwright/test';
 
 import { GOALS, LIMITS, SPORTS } from '../../src/features/athlete/catalog';
 
-const sql = readFileSync(join(__dirname, '../../supabase/migrations/0001_athlete_profiles.sql'), 'utf8');
+const sql = readFileSync(join(__dirname, '../../supabase/migrations/20261113000000_athlete_profiles.sql'), 'utf8');
 
 /** Body of one named check constraint (from `add constraint <name> check (` to the closing `);`). */
 function constraint(name: string): string {
