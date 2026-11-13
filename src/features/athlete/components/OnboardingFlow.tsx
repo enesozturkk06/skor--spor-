@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View, useWindowDimensions, type ScrollViewInstance, type TextInputInstance } from 'react-native';
 
 import { AppText, Button, Card, Chip, Screen, TextField } from '@/components/ui';
+import { numericRejectMessage, sanitizeNumericInput, type NumericSpec } from '@/lib/numeric-input';
 import { toNumber, validate } from '@/lib/validation';
 import { spacing } from '@/theme';
 
@@ -20,7 +21,19 @@ type Props = {
 
 const TOTAL_STEPS = 4;
 
-type BodyErrors = { age?: string | null; height?: string | null; weight?: string | null };
+type BodyField = 'age' | 'height' | 'weight';
+type BodyErrors = Partial<Record<BodyField, string | null>>;
+
+/**
+ * Length limits live here instead of TextInput `maxLength`: the platform
+ * truncates pasted text before onChangeText runs, which turned "1780" into
+ * "178" silently. The sanitiser sees the full input and rejects it instead.
+ */
+const NUMERIC: Record<BodyField, NumericSpec> = {
+  age: { maxIntDigits: 2, maxDecimals: 0 },
+  height: { maxIntDigits: 3, maxDecimals: 0 },
+  weight: { maxIntDigits: 3, maxDecimals: 1 },
+};
 
 export function OnboardingFlow({ initial, onSubmit, onClose }: Props) {
   const { width } = useWindowDimensions();
@@ -48,6 +61,21 @@ export function OnboardingFlow({ initial, onSubmit, onClose }: Props) {
   const choosePrimary = (id: SportId) => {
     setPrimary(id);
     setSecondary((prev) => prev.filter((s) => s !== id));
+  };
+
+  /**
+   * One handler for typed keys and pasted text alike. Rejected input keeps the
+   * previous value and explains why; accepted input clears that field's error.
+   */
+  const numericChange = (field: BodyField, setValue: (v: string) => void) => (raw: string) => {
+    const result = sanitizeNumericInput(raw, NUMERIC[field]);
+    if (result.ok) {
+      setValue(result.value);
+      setErrors((prev) => (prev[field] ? { ...prev, [field]: null } : prev));
+    } else {
+      // Always a new object → re-render, so a controlled input drops the rejected text.
+      setErrors((prev) => ({ ...prev, [field]: numericRejectMessage(result.reason, NUMERIC[field]) }));
+    }
   };
 
   const toggle = <T,>(list: T[], item: T, max: number): T[] =>
@@ -187,9 +215,8 @@ export function OnboardingFlow({ initial, onSubmit, onClose }: Props) {
                 label="Yaş"
                 icon="cake-variant-outline"
                 value={age}
-                onChangeText={(v) => setAge(v.replace(/[^0-9]/g, ''))}
+                onChangeText={numericChange('age', setAge)}
                 keyboardType="number-pad"
-                maxLength={2}
                 placeholder="27"
                 suffix="yıl"
                 error={errors.age}
@@ -203,9 +230,8 @@ export function OnboardingFlow({ initial, onSubmit, onClose }: Props) {
                     label="Boy"
                     icon="ruler"
                     value={height}
-                    onChangeText={(v) => setHeight(v.replace(/[^0-9]/g, ''))}
+                    onChangeText={numericChange('height', setHeight)}
                     keyboardType="number-pad"
-                    maxLength={3}
                     placeholder="178"
                     suffix="cm"
                     error={errors.height}
@@ -219,9 +245,8 @@ export function OnboardingFlow({ initial, onSubmit, onClose }: Props) {
                     label="Kilo"
                     icon="scale-bathroom"
                     value={weight}
-                    onChangeText={(v) => setWeight(v.replace(/[^0-9.,]/g, ''))}
+                    onChangeText={numericChange('weight', setWeight)}
                     keyboardType="decimal-pad"
-                    maxLength={5}
                     placeholder="75"
                     suffix="kg"
                     error={errors.weight}
