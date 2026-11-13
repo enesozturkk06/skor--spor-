@@ -40,6 +40,10 @@ export default defineConfig({
   webServer: {
     // serve-web.mjs adds the SPA fallback that `expo serve` lacks (refresh on /welcome etc.).
     command: `npm run build:web && node scripts/serve-web.mjs ${PORT}`,
+    // Never build the test app against the real Supabase project from .env:
+    // tests create accounts and must stay in local demo mode.
+    // (auth.spec "Demo modu" assertion fails if this ever leaks.)
+    env: { EXPO_NO_DOTENV: '1', EXPO_PUBLIC_SUPABASE_URL: '', EXPO_PUBLIC_SUPABASE_ANON_KEY: '' },
     url: baseURL,
     reuseExistingServer: !isCI,
     timeout: 300_000,
