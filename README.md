@@ -12,7 +12,29 @@ npm run web        # tarayıcı
 npm start          # Expo Go / emülatör için QR
 npm run typecheck  # tsc --noEmit
 npm run lint       # expo lint
+npm test           # Playwright uçtan uca testleri
+npm run check      # typecheck + lint + E2E (commit öncesi)
 ```
+
+## Testler
+
+Uçtan uca testler [e2e/](e2e/) klasöründe, Playwright ile yazıldı. Testler geliştirme sunucusuna değil **üretim web derlemesine** karşı çalışır: `npm test` önce `dist/`'i derler (`npm run build:web`), sonra `scripts/serve-web.mjs` ile sunar.
+
+| Komut | Açıklama |
+| --- | --- |
+| `npm test` | Tüm testler (mobil + masaüstü yerleşim) |
+| `npm run test:e2e:mobile` | Yalnızca mobil (Pixel 7) proje |
+| `npm run test:e2e:ui` | Etkileşimli Playwright arayüzü |
+| `npm run test:e2e:report` | Son çalıştırmanın HTML raporu |
+
+- Kapsam: açılış, kayıt/giriş doğrulamaları, onboarding kuralları (branş/hedef sınırları, aralık kontrolleri), dashboard bölümleri, sekmeler, profil düzenleme, çıkış, sayfa yenileme sonrası oturum davranışı, responsive taşma.
+- Her test temiz bir tarayıcı bağlamında (boş depolama) çalışır; tarayıcı konsolunda hata oluşursa test başarısız sayılır.
+- İlk kurulumda tarayıcı yoksa: `npx playwright install chromium`.
+- Ortak adımlar ve seçiciler [e2e/fixtures.ts](e2e/fixtures.ts) içindedir. Büyük harfle gösterilen başlıklar `tr-TR` ile eşleştirilir.
+
+## Web yayını (deploy) notu
+
+Web derlemesi tek sayfalık uygulamadır (`web.output: "single"`). Barındırma servisinde **tüm uygulama rotalarını `index.html`'e yönlendiren (SPA fallback) kural zorunludur**; aksi halde `/welcome`, `/onboarding` gibi sayfalar yenilendiğinde 404 döner. `expo serve` bu kuralı uygulamaz; yerelde `npm run build:web && npm run serve:web` kullanın.
 
 ## Supabase bağlantısı
 
