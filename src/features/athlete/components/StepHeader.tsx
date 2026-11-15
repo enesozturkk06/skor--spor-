@@ -1,20 +1,44 @@
+import { useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
 import { AppText, Icon } from '@/components/ui';
 import { colors, radius, spacing } from '@/theme';
+import { timing } from '@/theme/motion';
 
-type StepHeaderProps = {
+const pad = (n: number) => String(n).padStart(2, '0');
+
+/** One progress segment; its fill animates on the UI thread (Reduce Motion: instant). */
+function Segment({ filled, index }: { filled: boolean; index: number }) {
+  const fill = useSharedValue(filled ? 1 : 0);
+  useEffect(() => {
+    // Moving forward fills left to right; moving back empties without delay.
+    fill.set(withDelay(filled ? index * 40 : 0, withTiming(filled ? 1 : 0, timing.base)));
+  }, [fill, filled, index]);
+  const style = useAnimatedStyle(() => ({ width: `${fill.get() * 100}%` }));
+  return (
+    <View style={styles.segment}>
+      <Animated.View style={[styles.segmentFill, style]} />
+    </View>
+  );
+}
+
+type TopBarProps = {
+  /** 1-based step being shown; 0 hides the counter (intro). */
   step: number;
   total: number;
-  title: string;
-  subtitle: string;
+  /** Fill all segments (summary / finished). */
+  complete?: boolean;
   onBack?: () => void;
   onClose?: () => void;
 };
 
-const pad = (n: number) => String(n).padStart(2, '0');
-
-export function StepHeader({ step, total, title, subtitle, onBack, onClose }: StepHeaderProps) {
+/**
+ * Persistent onboarding chrome: back, step counter, close and the progress
+ * bar. It stays put while each step's content slides in underneath.
+ */
+export function OnboardingTopBar({ step, total, complete = false, onBack, onClose }: TopBarProps) {
+  const done = complete ? total : step;
   return (
     <View style={styles.wrap}>
       <View style={styles.nav}>
@@ -25,12 +49,18 @@ export function StepHeader({ step, total, title, subtitle, onBack, onClose }: St
         ) : (
           <View style={styles.navBtn} />
         )}
-        <AppText variant="overline" color="textMuted">
-          <AppText variant="overline" color="orange">
-            {pad(step)}
-          </AppText>{' '}
-          / {pad(total)}
-        </AppText>
+        {step > 0 && !complete ? (
+          <AppText variant="overline" color="textMuted">
+            <AppText variant="overline" color="orange">
+              {pad(step)}
+            </AppText>{' '}
+            / {pad(total)}
+          </AppText>
+        ) : (
+          <AppText variant="overline" color="gold">
+            {complete ? 'Hazır' : ''}
+          </AppText>
+        )}
         {onClose ? (
           <Pressable accessibilityRole="button" accessibilityLabel="Kapat" onPress={onClose} hitSlop={12} style={styles.navBtn}>
             <Icon name="close" size={22} />
@@ -39,11 +69,28 @@ export function StepHeader({ step, total, title, subtitle, onBack, onClose }: St
           <View style={styles.navBtn} />
         )}
       </View>
-      <View style={styles.segments} accessibilityRole="progressbar" accessibilityValue={{ min: 1, max: total, now: step }}>
+      <View
+        style={styles.segments}
+        accessible
+        accessibilityRole="progressbar"
+        accessibilityLabel="Profil adımları"
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-valuenow={done}
+        testID="onboarding-progress"
+      >
         {Array.from({ length: total }, (_, i) => (
-          <View key={i} style={[styles.segment, i < step && styles.segmentDone]} />
+          <Segment key={i} index={i} filled={i < done} />
         ))}
       </View>
+    </View>
+  );
+}
+
+/** Title + subtitle at the top of each step (slides with the step content). */
+export function StepTitle({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <View style={styles.title}>
       <AppText variant="display" accessibilityRole="header">
         {title}
       </AppText>
@@ -55,10 +102,11 @@ export function StepHeader({ step, total, title, subtitle, onBack, onClose }: St
 }
 
 const styles = StyleSheet.create({
-  wrap: { gap: spacing.md, marginBottom: spacing.xxl },
+  wrap: { gap: spacing.md, marginBottom: spacing.lg },
   nav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   navBtn: { width: 40, height: 40, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
-  segments: { flexDirection: 'row', gap: spacing.xs, marginBottom: spacing.sm },
-  segment: { flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.dataTrack },
-  segmentDone: { backgroundColor: colors.orange },
+  segments: { flexDirection: 'row', gap: spacing.xs },
+  segment: { flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.dataTrack, overflow: 'hidden' },
+  segmentFill: { height: '100%', borderRadius: 2, backgroundColor: colors.orange },
+  title: { gap: spacing.md, marginBottom: spacing.xxl },
 });

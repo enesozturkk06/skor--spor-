@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 
 import { useAuth } from '@/features/auth/AuthProvider';
 
+import { onboardingDraft } from './onboarding-draft';
 import { profileRepository, type ProfileLoadResult } from './profile-repository';
 import type { AthleteProfile, AthleteProfileInput } from './types';
 
@@ -39,7 +40,10 @@ export function AthleteProvider({ children }: { children: ReactNode }) {
   // Signing out (or an expired session) removes the previous athlete's device copy.
   useEffect(() => {
     const prev = previousUserId.current;
-    if (prev && prev !== userId) void profileRepository.clearCache(prev);
+    if (prev && prev !== userId) {
+      void profileRepository.clearCache(prev);
+      void onboardingDraft.clearOnSignOut(prev);
+    }
     previousUserId.current = userId;
   }, [userId]);
 

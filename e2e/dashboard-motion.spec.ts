@@ -86,6 +86,8 @@ test.describe('Ana ekran animasyonları', () => {
     await expect(page.locator('[data-testid="athlete-score"]')).toHaveText(String(target));
     const c = await ringCircumference(page);
     await expect.poll(() => ringOffset(page)).toBeCloseTo(c * (1 - target / 100), 0);
+    // Screen readers get the value too (aria-valuenow, not the ignored accessibilityValue).
+    await expect(page.getByTestId('score-ring')).toHaveAttribute('aria-valuenow', String(target));
   });
 
   test('haftalık grafik: çubuklar orantılı büyür, gün seçilir, gelecek günler pasif', async ({ app, page }) => {

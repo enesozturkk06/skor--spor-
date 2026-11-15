@@ -63,7 +63,7 @@ test.describe('Sporcu onboarding', () => {
     await app.checkbox('Güç artışı').click();
     await app.button('Devam et').click();
 
-    await app.button('Profili oluştur').click();
+    await app.button('Devam et').click();
     await expect(app.text('Yaş gerekli.')).toBeVisible();
     await expect(app.text('Boy gerekli.')).toBeVisible();
     await expect(app.text('Kilo gerekli.')).toBeVisible();
@@ -71,7 +71,7 @@ test.describe('Sporcu onboarding', () => {
     await app.field('Yaş').fill('9');
     await app.field('Boy').fill('300');
     await app.field('Kilo').fill('20');
-    await app.button('Profili oluştur').click();
+    await app.button('Devam et').click();
     await expect(app.text('Yaş 13–90 arasında olmalı.')).toBeVisible();
     await expect(app.text('Boy 120–230 arasında olmalı.')).toBeVisible();
     await expect(app.text('Kilo 30–250 arasında olmalı.')).toBeVisible();
@@ -93,6 +93,9 @@ test.describe('Fiziksel bilgi alanları: yazma ve yapıştırma', () => {
     await app.checkbox('Güç artışı').click();
     await app.button('Devam et').click();
     await expect(app.text('Fiziksel bilgiler')).toBeVisible();
+    // Fields enter one after another and are hidden until their entrance starts;
+    // keystrokes sent to a hidden input are dropped, so wait until all are shown.
+    for (const label of ['Yaş', 'Boy', 'Kilo']) await expect(app.field(label)).toBeVisible();
   });
 
   /** Replaces the field content in one input event, like a paste or autofill. */
@@ -191,6 +194,7 @@ test.describe('Fiziksel bilgi alanları: yazma ve yapıştırma', () => {
     await paste(app, 'Yaş', '27 yaş');
     await paste(app, 'Boy', '178 cm');
     await paste(app, 'Kilo', '75,5 kg');
+    await app.button('Devam et').click();
     await app.button('Profili oluştur').click();
     await app.expectDashboard();
     await app.tab('Profil').click();
@@ -204,7 +208,7 @@ test.describe('Fiziksel bilgi alanları: yazma ve yapıştırma', () => {
     await paste(app, 'Yaş', '9 yaş');
     await paste(app, 'Boy', '300 cm');
     await paste(app, 'Kilo', '20 kg');
-    await app.button('Profili oluştur').click();
+    await app.button('Devam et').click();
     await expect(app.text('Yaş 13–90 arasında olmalı.')).toBeVisible();
     await expect(app.text('Boy 120–230 arasında olmalı.')).toBeVisible();
     await expect(app.text('Kilo 30–250 arasında olmalı.')).toBeVisible();

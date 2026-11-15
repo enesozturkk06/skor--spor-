@@ -12,7 +12,9 @@ import { expect, test } from './fixtures';
 const absoluteEnteringBlocks = (page: Page) =>
   page.evaluate(() =>
     [...document.querySelectorAll<HTMLElement>('[style*="animation-name"]')]
-      .filter((el) => getComputedStyle(el).position === 'absolute')
+      // The bug writes position:absolute into the inline style; intentional layers
+      // (e.g. the logo built from stacked SVGs) get it from RN style classes.
+      .filter((el) => el.style.position === 'absolute')
       .map((el) => (el.textContent ?? '').trim().slice(0, 30)),
   );
 

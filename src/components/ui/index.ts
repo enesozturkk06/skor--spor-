@@ -1,3 +1,4 @@
+export { AnimatedLogo, AnimatedLogoMark } from './AnimatedLogo';
 export { AppText } from './AppText';
 export { BackdropGlow } from './BackdropGlow';
 export { Button } from './Button';

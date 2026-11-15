@@ -76,7 +76,7 @@ test.describe('Supabase modu: kayıt ve e-posta doğrulama', () => {
     await expect(app.text('E-postanı doğrula')).toBeVisible();
 
     await page.goto(mock.confirmationLink(email, baseURL!));
-    await expect(app.text('Ana branşın')).toBeVisible();
+    await app.startOnboarding();
     expect(page.url(), 'tokens must be removed from the address bar').not.toMatch(/access_token|refresh_token/);
 
     await app.completeOnboarding(DEFAULT_PROFILE);
@@ -156,13 +156,14 @@ test.describe('Supabase modu: giriş, oturum ve profil', () => {
     const email = uniqueEmail();
     mock.addUser({ email, password: PASSWORD, confirmed: false });
     await page.goto(mock.confirmationLink(email, baseURL!));
-    await expect(app.text('Ana branşın')).toBeVisible();
+    await app.startOnboarding();
 
     mock.profileWrites = 'server';
     await app.completeOnboarding();
     await expect(app.text('Profil kaydedilemedi. Lütfen tekrar dene.')).toBeVisible();
-    await expect(app.text('Fiziksel bilgiler')).toBeVisible(); // still on the form, values kept
-    await expect(app.field('Kilo')).toHaveValue('75');
+    // Still on the athlete card with every answer kept; the retry is one tap.
+    await expect(app.text('Sporcu kartın hazır')).toBeVisible();
+    await expect(app.text('Boks')).toBeVisible(); // sport name is an uppercase heading on the card
 
     mock.profileWrites = 'network';
     await app.button('Profili oluştur').click();

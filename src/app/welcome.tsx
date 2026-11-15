@@ -4,7 +4,7 @@ import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 
-import { AppText, Button, Icon, Logo, Screen, type IconName } from '@/components/ui';
+import { AnimatedLogo, AppText, Button, Icon, Screen, type IconName } from '@/components/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { SessionExpiredNotice } from '@/features/auth/components/SessionExpiredNotice';
 import { colors, radius, spacing } from '@/theme';
@@ -68,7 +68,7 @@ export default function WelcomeScreen() {
       <ScoreLines width={width} />
       <View style={styles.container}>
         <Animated.View entering={introTop} style={styles.top}>
-          <Logo size="md" />
+          <AnimatedLogo markSize={40} textSize={30} />
           <View style={styles.notice}>
             <SessionExpiredNotice />
           </View>

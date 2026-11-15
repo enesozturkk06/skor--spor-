@@ -108,11 +108,17 @@ export class App {
     await this.field('Şifre').fill(user.password);
   }
 
-  /** Signs up and waits for the first onboarding step. */
+  /** Signs up, passes the onboarding intro and waits for the first input step. */
   async signUp(user: TestUser) {
     await this.openSignUp();
     await this.fillSignUp(user);
     await this.button('Hesap oluştur').click();
+    await this.startOnboarding();
+  }
+
+  /** From the onboarding intro ("Başlayalım") to the first step. */
+  async startOnboarding() {
+    await this.button('Başlayalım').click();
     await expect(this.text('Ana branşın')).toBeVisible();
   }
 
@@ -130,7 +136,10 @@ export class App {
     await this.signInSubmit().click();
   }
 
-  /** Walks the 4 onboarding steps. `submitLabel` is "Kaydet" in edit mode. */
+  /**
+   * Walks the 4 input steps, then confirms on the athlete card.
+   * `submitLabel` is "Kaydet" in edit mode.
+   */
   async completeOnboarding(profile: TestProfile = DEFAULT_PROFILE, submitLabel = 'Profili oluştur') {
     await this.radio(profile.primary).click();
     await this.button('Devam et').click();
@@ -148,6 +157,9 @@ export class App {
     await this.field('Yaş').fill(profile.age);
     await this.field('Boy').fill(profile.height);
     await this.field('Kilo').fill(profile.weight);
+    await this.button('Devam et').click();
+
+    await expect(this.text('Sporcu kartın hazır')).toBeVisible();
     await this.button(submitLabel).click();
   }
 

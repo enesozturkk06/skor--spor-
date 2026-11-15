@@ -74,7 +74,9 @@ export function ProgressRing({
       accessible={Boolean(accessibilityLabel)}
       accessibilityRole="progressbar"
       accessibilityLabel={accessibilityLabel}
-      accessibilityValue={{ min: 0, max: 100, now: Math.round(clamped * 100) }}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={Math.round(clamped * 100)}
     >
       <Svg width={size} height={size}>
         {isGradient ? (

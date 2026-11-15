@@ -15,6 +15,7 @@ export const backendMode: BackendMode = env.isSupabaseConfigured ? 'supabase' : 
  */
 export const storageKeys = {
   profileCache: (userId: string) => `profile:${backendMode}:${userId}`,
+  onboardingDraft: (userId: string) => `onboarding-draft:${backendMode}:${userId}`,
   demoSession: 'demo:session',
   demoAccounts: 'demo:accounts',
 } as const;

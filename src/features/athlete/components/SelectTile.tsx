@@ -1,8 +1,19 @@
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useEffect } from 'react';
+import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import Animated, {
+  ReduceMotion,
+  ZoomIn,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 
 import { PressableScale } from '@/components/motion/PressableScale';
-import { pressScale } from '@/theme/motion';
 import { AppText, Icon, type IconName } from '@/components/ui';
+import { pressScale, spring } from '@/theme/motion';
 import { colors, radius, spacing } from '@/theme';
 
 type SelectTileProps = {
@@ -17,11 +28,23 @@ type SelectTileProps = {
   style?: StyleProp<ViewStyle>;
 };
 
+/** Selected icon "pops" with a spring (UI thread); no-op under Reduce Motion. */
+function useSelectPop(selected: boolean) {
+  const reduceMotion = useReducedMotion();
+  const scale = useSharedValue(1);
+  useEffect(() => {
+    if (!selected || reduceMotion) return;
+    scale.set(withSequence(withTiming(1.18, { duration: 110 }), withSpring(1, spring.select)));
+  }, [selected, reduceMotion, scale]);
+  return useAnimatedStyle(() => ({ transform: [{ scale: scale.get() }] }));
+}
+
 export function SelectTile({ label, icon, selected, onPress, layout = 'tile', multi = false, disabled, style }: SelectTileProps) {
+  const pop = useSelectPop(selected);
   return (
     <PressableScale
-        scaleTo={pressScale.tile}
-        haptic="select"
+      scaleTo={pressScale.tile}
+      haptic="select"
       accessibilityRole={multi ? 'checkbox' : 'radio'}
       aria-checked={selected}
       aria-disabled={Boolean(disabled)}
@@ -36,16 +59,19 @@ export function SelectTile({ label, icon, selected, onPress, layout = 'tile', mu
         style,
       ]}
     >
-      <View style={[styles.icon, selected && styles.iconSelected]}>
+      <Animated.View style={[styles.icon, selected && styles.iconSelected, pop]}>
         <Icon name={icon} size={layout === 'tile' ? 26 : 22} color={selected ? 'textOnOrange' : 'gold'} />
-      </View>
+      </Animated.View>
       <AppText variant="title" color={selected ? 'text' : 'textMuted'} style={layout === 'row' ? styles.rowLabel : undefined} numberOfLines={1}>
         {label}
       </AppText>
       {selected ? (
-        <View style={[styles.check, layout === 'tile' && styles.checkTile]}>
+        <Animated.View
+          entering={ZoomIn.duration(220).reduceMotion(ReduceMotion.System)}
+          style={[styles.check, layout === 'tile' && styles.checkTile]}
+        >
           <Icon name="check" size={14} color="textOnOrange" />
-        </View>
+        </Animated.View>
       ) : null}
     </PressableScale>
   );

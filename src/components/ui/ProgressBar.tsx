@@ -31,7 +31,9 @@ export function ProgressBar({ progress, color = colors.orange, height = 6, acces
       accessible={Boolean(accessibilityLabel)}
       accessibilityRole="progressbar"
       accessibilityLabel={accessibilityLabel}
-      accessibilityValue={{ min: 0, max: 100, now: Math.round(pct) }}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={Math.round(pct)}
       style={[styles.track, { height }]}
     >
       {animated ? (
