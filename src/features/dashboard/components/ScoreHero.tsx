@@ -1,5 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
+import { AnimatedNumber } from '@/components/motion/AnimatedNumber';
 import { AppText, Card, Icon, ProgressBar, ProgressRing, Tag } from '@/components/ui';
 import { colors, gradients, spacing } from '@/theme';
 
@@ -13,6 +14,11 @@ const PILLARS = [
   { key: 'nutrition', label: 'Beslenme', color: colors.dataNutrition, weight: SCORE_WEIGHTS.nutrition },
 ] as const;
 
+/** Choreography: score and ring start together, the pillars follow one by one. */
+const SCORE_DELAY = 120;
+const PILLAR_DELAY = 320;
+const PILLAR_STEP = 90;
+
 export function ScoreHero({ score, delta }: Props) {
   const tier = scoreTier(score.total);
   return (
@@ -23,7 +29,7 @@ export function ScoreHero({ score, delta }: Props) {
             Athlete Score
           </AppText>
           <View style={styles.scoreRow} accessible accessibilityLabel={`Athlete Score ${score.total} / 100`}>
-            <AppText variant="statXL">{score.total}</AppText>
+            <AnimatedNumber value={score.total} delay={SCORE_DELAY} variant="statXL" testID="athlete-score" />
             <AppText variant="statM" color="textMuted" style={styles.outOf}>
               /100
             </AppText>
@@ -39,21 +45,37 @@ export function ScoreHero({ score, delta }: Props) {
             </View>
           </View>
         </View>
-        <ProgressRing progress={score.total / 100} size={124} stroke={11} color={gradients.score} trackColor="rgba(255,255,255,0.08)">
+        <ProgressRing
+          progress={score.total / 100}
+          size={124}
+          stroke={11}
+          color={gradients.score}
+          trackColor="rgba(255,255,255,0.08)"
+          animated
+          delay={SCORE_DELAY}
+          testID="score-ring"
+        >
           <Icon name="lightning-bolt" size={30} color="gold" />
         </ProgressRing>
       </View>
 
       <View style={styles.pillars}>
-        {PILLARS.map((p) => (
+        {PILLARS.map((p, i) => (
           <View key={p.key} style={styles.pillar}>
             <View style={styles.pillarHead}>
               <AppText variant="small" color="textMuted">
                 {p.label}
               </AppText>
-              <AppText variant="smallStrong">{score[p.key]}</AppText>
+              <AnimatedNumber value={score[p.key]} delay={PILLAR_DELAY + i * PILLAR_STEP} variant="smallStrong" />
             </View>
-            <ProgressBar progress={score[p.key] / 100} color={p.color} height={5} accessibilityLabel={`${p.label} ${score[p.key]} puan`} />
+            <ProgressBar
+              progress={score[p.key] / 100}
+              color={p.color}
+              height={5}
+              animated
+              delay={PILLAR_DELAY + i * PILLAR_STEP}
+              accessibilityLabel={`${p.label} ${score[p.key]} puan`}
+            />
           </View>
         ))}
       </View>

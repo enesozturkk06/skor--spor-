@@ -45,6 +45,8 @@ export class MockSupabase {
   private readonly refreshTokens = new Map<string, string>();
   profileReads: Failure = 'none';
   profileWrites: Failure = 'none';
+  /** Artificial latency for profile reads (to observe loading states). */
+  profileReadDelayMs = 0;
 
   constructor(private readonly page: Page) {}
 
@@ -253,6 +255,7 @@ export class MockSupabase {
     if (!user) return this.json(route, 401, { code: '42501', details: null, hint: null, message: 'permission denied for table athlete_profiles' });
 
     if (req.method() === 'GET') {
+      if (this.profileReadDelayMs) await new Promise((r) => setTimeout(r, this.profileReadDelayMs));
       if (this.profileReads === 'network') return route.abort('failed');
       if (this.profileReads === 'server') return this.json(route, 503, { code: 'PGRST000', message: 'mock: service unavailable' });
       if (this.profileReads === 'unauthorized') return this.json(route, 401, { code: 'PGRST301', message: 'JWT expired' });

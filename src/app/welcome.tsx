@@ -52,9 +52,9 @@ function ScoreLines({ width }: { width: number }) {
 // Same choreography as before (intro 700 ms, then CTAs), now on the UI thread
 // via Reanimated and respecting Reduce Motion.
 const INTRO_MS = 700;
-const introTop = enter(0, { distance: 12, ms: INTRO_MS, step: 0 });
-const introHero = enter(0, { distance: 24, ms: INTRO_MS, step: 0 });
-const introCta = enter(0, { distance: 16, ms: 450, step: 0, delay: INTRO_MS });
+const introTop = enter(0, { ms: INTRO_MS, step: 0 });
+const introHero = enter(0, { ms: INTRO_MS, step: 0 });
+const introCta = enter(0, { ms: 450, step: 0, delay: INTRO_MS });
 
 export default function WelcomeScreen() {
   const router = useRouter();

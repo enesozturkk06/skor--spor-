@@ -27,6 +27,7 @@ type ProgressRingProps = {
   animated?: boolean;
   /** Delay before the sweep, ms (e.g. to follow a staggered entrance). */
   delay?: number;
+  testID?: string;
 };
 
 export function ProgressRing({
@@ -39,6 +40,7 @@ export function ProgressRing({
   accessibilityLabel,
   animated = false,
   delay = 0,
+  testID,
 }: ProgressRingProps) {
   const svgId = useSvgId('ring');
   const clamped = Math.max(0, Math.min(1, progress));
@@ -68,6 +70,7 @@ export function ProgressRing({
   return (
     <View
       style={{ width: size, height: size }}
+      testID={testID}
       accessible={Boolean(accessibilityLabel)}
       accessibilityRole="progressbar"
       accessibilityLabel={accessibilityLabel}

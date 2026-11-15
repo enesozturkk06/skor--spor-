@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   View,
@@ -27,6 +28,12 @@ type ScreenProps = {
   /** Extra bottom padding, e.g. to clear the floating tab bar. */
   bottomInset?: number;
   contentStyle?: StyleProp<ViewStyle>;
+  /**
+   * Pull-to-refresh (native). RefreshControl has no web implementation, so
+   * screens that use this must also offer a visible refresh action on web.
+   */
+  onRefresh?: () => void;
+  refreshing?: boolean;
 };
 
 export function Screen({
@@ -38,6 +45,8 @@ export function Screen({
   glow = true,
   bottomInset = 0,
   contentStyle,
+  onRefresh,
+  refreshing = false,
 }: ScreenProps) {
   const maxWidth = width === 'form' ? layout.formMaxWidth : width === 'content' ? layout.contentMaxWidth : undefined;
   const inner = [styles.inner, maxWidth ? { maxWidth } : null, contentStyle];
@@ -53,6 +62,19 @@ export function Screen({
               contentContainerStyle={[styles.scrollContent, { paddingBottom: spacing.xxl + bottomInset }]}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
+              refreshControl={
+                onRefresh ? (
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                    tintColor={colors.orange}
+                    colors={[colors.orange, colors.gold]}
+                    progressBackgroundColor={colors.surfaceAlt}
+                    title={refreshing ? 'Yenileniyor…' : undefined}
+                    titleColor={colors.textMuted}
+                  />
+                ) : undefined
+              }
             >
               <View style={inner}>{children}</View>
             </ScrollView>

@@ -1,5 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
+import { AnimatedNumber } from '@/components/motion/AnimatedNumber';
 import { AppText, Card, ProgressBar } from '@/components/ui';
 import { spacing } from '@/theme';
 
@@ -13,7 +14,7 @@ export function DailyGoalCard({ minutes, target }: { minutes: number; target: nu
     <Card accent="orange" style={styles.card}>
       <MiniCardHeader label="Hedef" icon="target" tone="orange" />
       <AppText variant="statL" style={styles.value} numberOfLines={1} adjustsFontSizeToFit>
-        {minutes}
+        <AnimatedNumber value={minutes} delay={150} variant="statL" testID="daily-minutes" />
         <AppText variant="smallStrong" color="textMuted">
           {' '}/ {target} dk
         </AppText>
@@ -22,7 +23,7 @@ export function DailyGoalCard({ minutes, target }: { minutes: number; target: nu
         {remaining > 0 ? `${remaining} dk kaldı` : 'Tamamlandı'}
       </AppText>
       <View style={styles.bar}>
-        <ProgressBar progress={progress} height={6} accessibilityLabel={`Günlük hedefin yüzde ${pct}'i tamamlandı`} />
+        <ProgressBar progress={progress} height={6} animated delay={200} accessibilityLabel={`Günlük hedefin yüzde ${pct}'i tamamlandı`} />
       </View>
     </Card>
   );

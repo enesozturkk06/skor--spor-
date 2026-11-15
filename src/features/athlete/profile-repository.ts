@@ -29,7 +29,7 @@ export type ProfileLoadResult =
   /** Backend unreachable; showing the last copy saved on this device. */
   | { status: 'stale'; profile: AthleteProfile }
   /** Backend unreachable and nothing cached: the UI offers a retry. */
-  | { status: 'error'; message: string };
+  | { status: 'error'; message: string; reason?: 'auth' | 'network' };
 
 export class ProfileSaveError extends Error {}
 
@@ -138,10 +138,10 @@ export const profileRepository = {
       // A rejected session is not "offline": never fall back to the device copy.
       if (isPostgrestError(error) && isAuthRejection(error)) {
         await storage.remove(cacheKey);
-        return { status: 'error', message: SESSION_REJECTED };
+        return { status: 'error', message: SESSION_REJECTED, reason: 'auth' };
       }
       if (cached) return { status: 'stale', profile: cached };
-      return { status: 'error', message: 'Profil yüklenemedi. İnternet bağlantını kontrol edip tekrar dene.' };
+      return { status: 'error', message: 'Profil yüklenemedi. İnternet bağlantını kontrol edip tekrar dene.', reason: 'network' };
     }
   },
 

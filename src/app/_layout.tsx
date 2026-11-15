@@ -3,16 +3,16 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ReduceMotion, ReducedMotionConfig } from 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { IconFont } from '@/components/ui/Icon';
-import { LogoMark } from '@/components/ui';
 import { AthleteProvider, useAthlete } from '@/features/athlete/AthleteProvider';
 import { ProfileLoadError } from '@/features/athlete/components/ProfileLoadError';
 import { AuthProvider, useAuth } from '@/features/auth/AuthProvider';
+import { DashboardSkeleton } from '@/features/dashboard/components/DashboardSkeleton';
 import { colors } from '@/theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -53,26 +53,18 @@ export default function RootLayout() {
   );
 }
 
-function BootScreen() {
-  return (
-    <View style={styles.boot} accessibilityLabel="Yükleniyor">
-      <LogoMark size={64} />
-      <ActivityIndicator color={colors.orange} />
-    </View>
-  );
-}
-
 function RootNavigator() {
   const { user, initializing } = useAuth();
   const { profile, loading, loadError } = useAthlete();
   const ready = !initializing && !loading;
 
+  // The native splash only covers session restore; the profile request that
+  // follows shows a dashboard skeleton (faster perceived start on slow networks).
   useEffect(() => {
-    if (ready) SplashScreen.hideAsync().catch(() => {});
-  }, [ready]);
+    if (!initializing) SplashScreen.hideAsync().catch(() => {});
+  }, [initializing]);
 
-  // Initial boot keeps the native splash; later loads (e.g. right after sign-in) show a branded loader.
-  if (!ready) return initializing ? null : <BootScreen />;
+  if (!ready) return initializing ? null : <DashboardSkeleton />;
 
   const signedIn = Boolean(user);
   const onboarded = Boolean(profile);
@@ -110,5 +102,4 @@ function RootNavigator() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
-  boot: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 24, backgroundColor: colors.bg },
 });

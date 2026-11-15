@@ -13,7 +13,14 @@ type AthleteContextValue = {
   loadError: string | null;
   /** Showing the device copy because the backend was unreachable. */
   stale: boolean;
+  /** Full reload: clears the screen (skeleton) — used after a load error. */
   reload: () => void;
+  /**
+   * Background refresh (pull-to-refresh): keeps showing the current profile
+   * and swaps in the fresh one. A failed refresh never wipes what is shown.
+   */
+  refresh: () => Promise<void>;
+  refreshing: boolean;
   saveProfile: (input: AthleteProfileInput) => Promise<AthleteProfile>;
 };
 
@@ -61,6 +68,28 @@ export function AthleteProvider({ children }: { children: ReactNode }) {
     setAttempt((n) => n + 1);
   }, []);
 
+  const [refreshing, setRefreshing] = useState(false);
+  const refresh = useCallback(async () => {
+    if (!userId || refreshing) return;
+    setRefreshing(true);
+    try {
+      const result = await profileRepository.load(userId).catch(
+        (): ProfileLoadResult => ({ status: 'error', message: 'Profil yenilenemedi.' }),
+      );
+      setLoaded((prev) => {
+        const shown = prev && prev.userId === userId && prev.result.status !== 'error' ? prev.result.profile : null;
+        // Network trouble: keep what is on screen, marked as possibly outdated.
+        // A rejected session is never treated as "offline" (same rule as load()).
+        if (result.status === 'error' && result.reason !== 'auth' && shown) {
+          return { userId, result: { status: 'stale', profile: shown } };
+        }
+        return { userId, result };
+      });
+    } finally {
+      setRefreshing(false);
+    }
+  }, [userId, refreshing]);
+
   const saveProfile = useCallback(
     async (input: AthleteProfileInput) => {
       if (!userId) throw new Error('Oturum bulunamadı.');
@@ -84,9 +113,11 @@ export function AthleteProvider({ children }: { children: ReactNode }) {
       loadError: current?.status === 'error' ? current.message : null,
       stale: current?.status === 'stale',
       reload,
+      refresh,
+      refreshing,
       saveProfile,
     }),
-    [profile, userId, current, reload, saveProfile],
+    [profile, userId, current, reload, refresh, refreshing, saveProfile],
   );
 
   return <AthleteContext.Provider value={value}>{children}</AthleteContext.Provider>;
