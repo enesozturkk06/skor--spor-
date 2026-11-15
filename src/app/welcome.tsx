@@ -1,12 +1,14 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Animated, Easing, Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
+
+import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import Animated from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 
 import { AppText, Button, Icon, Logo, Screen, type IconName } from '@/components/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { SessionExpiredNotice } from '@/features/auth/components/SessionExpiredNotice';
 import { colors, radius, spacing } from '@/theme';
+import { enter } from '@/components/motion/entrance';
 import { useSvgId } from '@/components/ui/useSvgId';
 
 const PILLARS: { icon: IconName; label: string }[] = [
@@ -16,7 +18,7 @@ const PILLARS: { icon: IconName; label: string }[] = [
   { icon: 'brain', label: 'AI Koç' },
 ];
 
-const useNativeDriver = Platform.OS !== 'web';
+
 
 /** Large forward-leaning "score lines" — the brand's motion motif. */
 function ScoreLines({ width }: { width: number }) {
@@ -47,24 +49,17 @@ function ScoreLines({ width }: { width: number }) {
   );
 }
 
+// Same choreography as before (intro 700 ms, then CTAs), now on the UI thread
+// via Reanimated and respecting Reduce Motion.
+const INTRO_MS = 700;
+const introTop = enter(0, { distance: 12, ms: INTRO_MS, step: 0 });
+const introHero = enter(0, { distance: 24, ms: INTRO_MS, step: 0 });
+const introCta = enter(0, { distance: 16, ms: 450, step: 0, delay: INTRO_MS });
+
 export default function WelcomeScreen() {
   const router = useRouter();
   const { mode } = useAuth();
   const { width } = useWindowDimensions();
-  const [intro] = useState(() => new Animated.Value(0));
-  const [cta] = useState(() => new Animated.Value(0));
-
-  useEffect(() => {
-    Animated.sequence([
-      Animated.timing(intro, { toValue: 1, duration: 700, easing: Easing.out(Easing.cubic), useNativeDriver }),
-      Animated.timing(cta, { toValue: 1, duration: 450, easing: Easing.out(Easing.cubic), useNativeDriver }),
-    ]).start();
-  }, [intro, cta]);
-
-  const rise = (v: Animated.Value, d = 24) => ({
-    opacity: v,
-    transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [d, 0] }) }],
-  });
 
   const heroSize = width < 380 ? 52 : width < 720 ? 64 : 84;
 
@@ -72,14 +67,14 @@ export default function WelcomeScreen() {
     <Screen width="form" scroll={false}>
       <ScoreLines width={width} />
       <View style={styles.container}>
-        <Animated.View style={[styles.top, rise(intro, 12)]}>
+        <Animated.View entering={introTop} style={styles.top}>
           <Logo size="md" />
           <View style={styles.notice}>
             <SessionExpiredNotice />
           </View>
         </Animated.View>
 
-        <Animated.View style={[styles.hero, rise(intro)]}>
+        <Animated.View entering={introHero} style={styles.hero}>
           <AppText variant="overline" color="gold" style={styles.kicker}>
             Sporcu performans platformu
           </AppText>
@@ -104,7 +99,7 @@ export default function WelcomeScreen() {
           </View>
         </Animated.View>
 
-        <Animated.View style={[styles.actions, rise(cta, 16)]}>
+        <Animated.View entering={introCta} style={styles.actions}>
           <Button label="Hemen başla" iconRight="arrow-right" onPress={() => router.push('/sign-up')} />
           <Button label="Giriş yap" variant="secondary" onPress={() => router.push('/sign-in')} />
           {mode === 'demo' ? (

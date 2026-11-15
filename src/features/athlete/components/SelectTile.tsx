@@ -1,5 +1,7 @@
-import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { PressableScale } from '@/components/motion/PressableScale';
+import { pressScale } from '@/theme/motion';
 import { AppText, Icon, type IconName } from '@/components/ui';
 import { colors, radius, spacing } from '@/theme';
 
@@ -17,7 +19,9 @@ type SelectTileProps = {
 
 export function SelectTile({ label, icon, selected, onPress, layout = 'tile', multi = false, disabled, style }: SelectTileProps) {
   return (
-    <Pressable
+    <PressableScale
+        scaleTo={pressScale.tile}
+        haptic="select"
       accessibilityRole={multi ? 'checkbox' : 'radio'}
       aria-checked={selected}
       aria-disabled={Boolean(disabled)}
@@ -43,7 +47,7 @@ export function SelectTile({ label, icon, selected, onPress, layout = 'tile', mu
           <Icon name="check" size={14} color="textOnOrange" />
         </View>
       ) : null}
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -71,7 +75,7 @@ const styles = StyleSheet.create({
   rowLabel: { flex: 1 },
   selected: { borderColor: colors.orange, backgroundColor: colors.surfaceAlt },
   disabled: { opacity: 0.4 },
-  pressed: { transform: [{ scale: 0.98 }] },
+  pressed: { opacity: 0.92 },
   icon: {
     width: 44,
     height: 44,

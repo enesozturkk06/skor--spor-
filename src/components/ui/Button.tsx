@@ -1,6 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { ActivityIndicator, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { ActivityIndicator, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { PressableScale } from '@/components/motion/PressableScale';
+import { pressScale } from '@/theme/motion';
 import { colors, gradients, radius, spacing } from '@/theme';
 
 import { AppText } from './AppText';
@@ -54,7 +56,9 @@ export function Button({
   );
 
   return (
-    <Pressable
+    <PressableScale
+        scaleTo={pressScale.button}
+        haptic="tap"
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityHint={accessibilityHint}
@@ -78,7 +82,7 @@ export function Button({
       ) : (
         content
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -95,5 +99,5 @@ const styles = StyleSheet.create({
   secondary: { backgroundColor: colors.surfaceAlt, borderWidth: 1, borderColor: colors.borderStrong },
   dangerStyle: { backgroundColor: colors.dangerSoft, borderWidth: 1, borderColor: 'rgba(255,90,95,0.3)' },
   disabled: { opacity: 0.45 },
-  pressed: { opacity: 0.88, transform: [{ scale: 0.985 }] },
+  pressed: { opacity: 0.88 },
 });

@@ -1,5 +1,7 @@
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
+import { PressableScale } from '@/components/motion/PressableScale';
+import { pressScale } from '@/theme/motion';
 import { colors, radius, spacing } from '@/theme';
 
 import { AppText } from './AppText';
@@ -17,7 +19,9 @@ type ChipProps = {
 export function Chip({ label, icon, selected = false, tone = 'orange', onPress, disabled }: ChipProps) {
   const activeColor = tone === 'orange' ? 'orange' : 'gold';
   return (
-    <Pressable
+    <PressableScale
+        scaleTo={pressScale.tile}
+        haptic="select"
       accessibilityRole={onPress ? 'checkbox' : 'text'}
       aria-checked={onPress ? selected : undefined}
       aria-disabled={onPress ? Boolean(disabled) : undefined}
@@ -38,7 +42,7 @@ export function Chip({ label, icon, selected = false, tone = 'orange', onPress, 
       <AppText variant="smallStrong" color={selected ? 'text' : 'textMuted'}>
         {label}
       </AppText>
-    </Pressable>
+    </PressableScale>
   );
 }
 

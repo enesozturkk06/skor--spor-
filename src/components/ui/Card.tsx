@@ -1,7 +1,9 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import { PressableScale } from '@/components/motion/PressableScale';
+import { pressScale } from '@/theme/motion';
 import { colors, gradients, radius, spacing } from '@/theme';
 
 type CardProps = {
@@ -45,14 +47,16 @@ export function Card({
 
   if (onPress) {
     return (
-      <Pressable
+      <PressableScale
+        scaleTo={pressScale.card}
+        haptic="tap"
         accessibilityRole="button"
         accessibilityLabel={accessibilityLabel}
         onPress={onPress}
         style={({ pressed }) => [...baseStyle, pressed && styles.pressed]}
       >
         {body}
-      </Pressable>
+      </PressableScale>
     );
   }
   return <View style={baseStyle}>{body}</View>;
@@ -74,5 +78,5 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 2,
     zIndex: 1,
   },
-  pressed: { backgroundColor: colors.surfacePressed, transform: [{ scale: 0.99 }] },
+  pressed: { backgroundColor: colors.surfacePressed },
 });

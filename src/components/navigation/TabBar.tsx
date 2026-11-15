@@ -1,8 +1,10 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { PressableScale } from '@/components/motion/PressableScale';
+import { pressScale } from '@/theme/motion';
 import { AppText, Icon, type IconName } from '@/components/ui';
 import { colors, gradients, layout, radius, spacing } from '@/theme';
 
@@ -44,7 +46,9 @@ export function TabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
 
           if (meta.featured) {
             return (
-              <Pressable
+              <PressableScale
+        scaleTo={pressScale.tile}
+        haptic="select"
                 key={route.key}
                 accessibilityRole="tab"
                 aria-selected={focused}
@@ -56,12 +60,14 @@ export function TabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
                 <LinearGradient colors={gradients.orange} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.featured, focused && styles.featuredActive]}>
                   <Icon name={meta.icon} size={24} color="textOnOrange" />
                 </LinearGradient>
-              </Pressable>
+              </PressableScale>
             );
           }
 
           return (
-            <Pressable
+            <PressableScale
+        scaleTo={pressScale.tile}
+        haptic="select"
               key={route.key}
               accessibilityRole="tab"
               aria-selected={focused}
@@ -75,7 +81,7 @@ export function TabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
                 {meta.label}
               </AppText>
               <View style={[styles.indicator, focused && styles.indicatorActive]} />
-            </Pressable>
+            </PressableScale>
           );
         })}
       </View>

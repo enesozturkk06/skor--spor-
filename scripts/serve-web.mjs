@@ -30,10 +30,14 @@ const TYPES = {
   '.map': 'application/json; charset=utf-8',
 };
 
-/** "8125:dist-mock" → { port: 8125, dir: "dist-mock" }; "8123" → dist. */
+/**
+ * "8125:dist-mock" → { port: 8125, dir: "dist-mock" }; "8123" → dist.
+ * Splits on the first ':' only, so Windows paths ("8130:C:\\build") work.
+ */
 function parseTarget(arg) {
-  const [port, dir = 'dist'] = String(arg).split(':');
-  return { port: Number(port), dir };
+  const s = String(arg);
+  const i = s.indexOf(':');
+  return i === -1 ? { port: Number(s), dir: 'dist' } : { port: Number(s.slice(0, i)), dir: s.slice(i + 1) };
 }
 
 const args = process.argv.slice(2);

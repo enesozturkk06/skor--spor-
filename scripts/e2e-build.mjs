@@ -13,8 +13,8 @@ export const MOCK_SUPABASE_URL = 'https://skor-e2e.invalid';
 const MOCK_KEY = 'sb_publishable_e2e_mock_key_not_a_real_key';
 
 const builds = [
-  { out: 'dist', env: { EXPO_PUBLIC_SUPABASE_URL: '', EXPO_PUBLIC_SUPABASE_ANON_KEY: '' } },
-  { out: 'dist-mock', env: { EXPO_PUBLIC_SUPABASE_URL: MOCK_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY: MOCK_KEY } },
+  { out: 'dist', env: { EXPO_PUBLIC_SUPABASE_URL: '', EXPO_PUBLIC_SUPABASE_ANON_KEY: '', EXPO_PUBLIC_MOTION_LAB: '1' } },
+  { out: 'dist-mock', env: { EXPO_PUBLIC_SUPABASE_URL: MOCK_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY: MOCK_KEY, EXPO_PUBLIC_MOTION_LAB: '1' } },
 ];
 
 for (const { out, env } of builds) {

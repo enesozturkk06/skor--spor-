@@ -1,18 +1,14 @@
-import {
-  BarlowCondensed_600SemiBold,
-  BarlowCondensed_700Bold,
-  BarlowCondensed_800ExtraBold,
-  BarlowCondensed_800ExtraBold_Italic,
-} from '@expo-google-fonts/barlow-condensed';
-import { Inter_400Regular, Inter_500Medium, Inter_600SemiBold, Inter_700Bold } from '@expo-google-fonts/inter';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { ReduceMotion, ReducedMotionConfig } from 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { IconFont } from '@/components/ui/Icon';
 import { LogoMark } from '@/components/ui';
 import { AthleteProvider, useAthlete } from '@/features/athlete/AthleteProvider';
 import { ProfileLoadError } from '@/features/athlete/components/ProfileLoadError';
@@ -24,29 +20,36 @@ SplashScreen.preventAutoHideAsync().catch(() => {
 });
 
 export default function RootLayout() {
+  // Subset fonts built by `npm run fonts:build` (family names unchanged), plus the
+  // icon font so icons never pop in after text.
   const [fontsLoaded, fontError] = useFonts({
-    BarlowCondensed_600SemiBold,
-    BarlowCondensed_700Bold,
-    BarlowCondensed_800ExtraBold,
-    BarlowCondensed_800ExtraBold_Italic,
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
+    BarlowCondensed_600SemiBold: require('../../assets/fonts/BarlowCondensed_600SemiBold.ttf'),
+    BarlowCondensed_700Bold: require('../../assets/fonts/BarlowCondensed_700Bold.ttf'),
+    BarlowCondensed_800ExtraBold: require('../../assets/fonts/BarlowCondensed_800ExtraBold.ttf'),
+    BarlowCondensed_800ExtraBold_Italic: require('../../assets/fonts/BarlowCondensed_800ExtraBold_Italic.ttf'),
+    Inter_400Regular: require('../../assets/fonts/Inter_400Regular.ttf'),
+    Inter_500Medium: require('../../assets/fonts/Inter_500Medium.ttf'),
+    Inter_600SemiBold: require('../../assets/fonts/Inter_600SemiBold.ttf'),
+    Inter_700Bold: require('../../assets/fonts/Inter_700Bold.ttf'),
+    ...IconFont.font,
   });
 
   if (fontError) console.warn('[fonts] failed to load, falling back to system fonts', fontError);
   if (!fontsLoaded && !fontError) return null;
 
   return (
-    <SafeAreaProvider>
-      <AuthProvider>
-        <AthleteProvider>
-          <StatusBar style="light" />
-          <RootNavigator />
-        </AthleteProvider>
-      </AuthProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={styles.root}>
+      {/* Every Reanimated animation follows the OS "Reduce Motion" setting. */}
+      <ReducedMotionConfig mode={ReduceMotion.System} />
+      <SafeAreaProvider>
+        <AuthProvider>
+          <AthleteProvider>
+            <StatusBar style="light" />
+            <RootNavigator />
+          </AthleteProvider>
+        </AuthProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -89,6 +92,8 @@ function RootNavigator() {
 
       {/* Email-link landing page: reachable in every state, it hands over to the guards itself. */}
       <Stack.Screen name="auth/callback" />
+      {/* Dev/E2E-only preview of motion primitives; redirects in production. */}
+      <Stack.Screen name="motion-lab" />
 
       <Stack.Protected guard={signedIn && !onboarded} redirectTo={signedIn ? '/' : '/welcome'}>
         <Stack.Screen name="onboarding" />
@@ -104,5 +109,6 @@ function RootNavigator() {
 }
 
 const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: colors.bg },
   boot: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 24, backgroundColor: colors.bg },
 });
