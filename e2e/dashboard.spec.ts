@@ -16,7 +16,9 @@ test.describe('Ana sayfa dashboard', () => {
     for (const t of ['Athlete Score', 'Hedef', 'Seri', 'Haftalık aktivite', 'Antrenman', 'Beslenme', 'Recovery', 'Hızlı erişim', 'Own your performance.']) {
       await expect(app.text(t), t).toBeAttached();
     }
-    await expect(page.getByRole('alert').filter({ hasText: 'Örnek veri.' })).toBeVisible();
+    // Real data only (Phase 3E): the score explains its basis instead of a sample-data banner.
+    await expect(app.button('Skor neye dayanıyor?')).toBeVisible();
+    await expect(page.getByText('Örnek veri.')).toHaveCount(0);
   });
 
   test('hızlı erişim kartı modül önizlemesini açar ve geri döner', async ({ app, page }) => {

@@ -60,6 +60,50 @@ export const DEFAULT_PROFILE: TestProfile = {
 };
 
 /* ------------------------------------------------------------------ */
+/* Seeding real (logged) workouts in the demo build                    */
+/* ------------------------------------------------------------------ */
+
+export type SeedWorkout = { start: Date; minutes: number; name?: string; sport?: string; rpe?: number | null; benchKg?: number; plankS?: number };
+
+/**
+ * Writes finished workouts for the signed-in demo user straight into the
+ * device store (what finishing them in the app would have written). The app
+ * reads them on its next start, so call this before a reload.
+ */
+export async function seedDemoWorkouts(page: Page, workouts: SeedWorkout[]) {
+  const list = workouts.map((w) => ({ ...w, start: w.start.toISOString() }));
+  await page.evaluate((items) => {
+    const user = JSON.parse(localStorage.getItem('skorspor:demo:session') ?? 'null') as { id: string } | null;
+    if (!user) throw new Error('no demo session');
+    const rows = items.map((w) => {
+      const end = new Date(Date.parse(w.start) + w.minutes * 60_000).toISOString();
+      const kg = w.benchKg ?? 60;
+      return {
+        id: crypto.randomUUID(),
+        userId: user.id,
+        name: w.name ?? 'Push günü',
+        sport: w.sport ?? 'fitness',
+        templateId: null,
+        startedAt: w.start,
+        endedAt: end,
+        rpe: w.rpe ?? null,
+        notes: null,
+        sets: [1, 2, 3].map((n): Record<string, unknown> => ({
+          exerciseKey: 'bench_press', exerciseName: 'Düz Bench Press', position: 1, setIndex: n, kind: 'normal',
+          reps: 8, weightKg: kg, durationS: null, distanceM: null, restS: 90, rpe: null, completedAt: end,
+        })).concat(w.plankS ? [{
+          exerciseKey: 'plank', exerciseName: 'Plank', position: 2, setIndex: 1, kind: 'normal',
+          reps: null, weightKg: null, durationS: w.plankS, distanceM: null, restS: 60, rpe: null, completedAt: end,
+        }] : []),
+      };
+    });
+    const key = `skorspor:training-history:demo:${user.id}`;
+    const existing = JSON.parse(localStorage.getItem(key) ?? '[]') as unknown[];
+    localStorage.setItem(key, JSON.stringify([...existing, ...rows]));
+  }, list);
+}
+
+/* ------------------------------------------------------------------ */
 /* Page driver: user-level actions, no implementation details          */
 /* ------------------------------------------------------------------ */
 

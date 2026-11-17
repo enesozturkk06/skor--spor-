@@ -1,4 +1,5 @@
-import { useMemo, type ReactNode } from 'react';
+import { useRouter } from 'expo-router';
+import { useCallback, useMemo, type ReactNode } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -14,13 +15,14 @@ import { MotivationCard } from '@/features/dashboard/components/MotivationCard';
 import { NutritionSummary } from '@/features/dashboard/components/NutritionSummary';
 import { QuickAccess } from '@/features/dashboard/components/QuickAccess';
 import { RecoverySummary } from '@/features/dashboard/components/RecoverySummary';
-import { SampleDataNotice } from '@/features/dashboard/components/SampleDataNotice';
+import { ScoreBasis } from '@/features/dashboard/components/ScoreBasis';
 import { ScoreHero } from '@/features/dashboard/components/ScoreHero';
 import { StreakCard } from '@/features/dashboard/components/StreakCard';
 import { TrainingStats } from '@/features/dashboard/components/TrainingStats';
 import { WeeklyActivityChart } from '@/features/dashboard/components/WeeklyActivityChart';
 import { buildDashboardSnapshot, motivationOfTheDay } from '@/features/dashboard/dashboard-data';
 import { useOpenModule } from '@/features/modules/useOpenModule';
+import { useTraining } from '@/features/training/TrainingProvider';
 import { layout, spacing } from '@/theme';
 
 /** Each block rises in after the previous one (Reduce Motion: appears at once). */
@@ -30,20 +32,33 @@ function Reveal({ order, children }: { order: number; children: ReactNode }) {
 
 export default function HomeScreen() {
   const { user } = useAuth();
-  const { profile, refresh, refreshing } = useAthlete();
+  const { profile, refresh: refreshProfile, refreshing } = useAthlete();
+  const training = useTraining();
+  const router = useRouter();
   const openModule = useOpenModule();
   const clearance = useTabBarClearance();
   const { width } = useWindowDimensions();
   const wide = width >= layout.wideBreakpoint;
 
-  const snapshot = useMemo(() => (profile ? buildDashboardSnapshot(profile) : null), [profile]);
+  // Training numbers come from the athlete's own logged workouts.
+  const { history, historyComplete, historyLoadedUntil } = training;
+  const snapshot = useMemo(
+    () => (profile ? buildDashboardSnapshot(profile, history, new Date(), { complete: historyComplete, loadedUntil: historyLoadedUntil }) : null),
+    [profile, history, historyComplete, historyLoadedUntil],
+  );
+  const refreshTraining = training.refresh;
+  const refresh = useCallback(async () => {
+    await Promise.all([refreshProfile(), refreshTraining()]);
+  }, [refreshProfile, refreshTraining]);
   if (!user || !profile || !snapshot) return null;
-  const sample = snapshot.isSample;
 
   const overview = (
     <View style={styles.stack}>
       <Reveal order={2}>
-        <ScoreHero score={snapshot.score} delta={snapshot.scoreDelta} />
+        <ScoreHero score={snapshot.score} />
+        <View style={styles.basis}>
+          <ScoreBasis score={snapshot.score} />
+        </View>
       </Reveal>
       <Reveal order={3}>
         <View style={styles.row}>
@@ -52,7 +67,7 @@ export default function HomeScreen() {
         </View>
       </Reveal>
       <Reveal order={4}>
-        <WeeklyActivityChart week={snapshot.week} dailyTarget={snapshot.dailyTargetMinutes} isSample={sample} />
+        <WeeklyActivityChart week={snapshot.week} dailyTarget={snapshot.dailyTargetMinutes} />
       </Reveal>
     </View>
   );
@@ -61,19 +76,19 @@ export default function HomeScreen() {
     <View style={styles.stack}>
       <Reveal order={5}>
         <SectionHeader
-          overline={sample ? 'Bu hafta · Örnek veri' : 'Bu hafta'}
+          overline="Bu hafta"
           title="Antrenman"
-          actionLabel="Detay"
-          onAction={() => openModule('performance')}
+          actionLabel="Geçmiş"
+          onAction={() => router.push('/history')}
         />
         <TrainingStats stats={snapshot.stats} />
       </Reveal>
       <Reveal order={6}>
-        <SectionHeader overline="Bugün" title="Yakıt & toparlanma" />
+        <SectionHeader overline="Yakında" title="Yakıt & toparlanma" />
         {/* Cards wrap to full width on narrow screens instead of being squeezed. */}
         <View style={[styles.row, styles.wrap]}>
-          <NutritionSummary nutrition={snapshot.nutrition} isSample={sample} onPress={() => openModule('nutrition')} />
-          <RecoverySummary recovery={snapshot.recovery} isSample={sample} onPress={() => openModule('recovery')} />
+          <NutritionSummary nutrition={snapshot.nutrition} onPress={() => openModule('nutrition')} />
+          <RecoverySummary onPress={() => openModule('recovery')} />
         </View>
       </Reveal>
     </View>
@@ -86,11 +101,6 @@ export default function HomeScreen() {
           <DashboardHeader name={user.displayName} primarySport={profile.primarySport} onRefresh={refresh} refreshing={refreshing} />
         </Reveal>
         <StaleProfileNotice />
-        {sample ? (
-          <Reveal order={1}>
-            <SampleDataNotice />
-          </Reveal>
-        ) : null}
 
         {wide ? (
           <View style={styles.wideRow}>
@@ -120,6 +130,7 @@ const styles = StyleSheet.create({
   stack: { gap: spacing.xxl },
   row: { flexDirection: 'row', gap: spacing.md },
   wrap: { flexWrap: 'wrap' },
+  basis: { marginTop: spacing.md },
   wideRow: { flexDirection: 'row', gap: spacing.xxl, alignItems: 'flex-start' },
   wideCol: { flex: 1 },
 });

@@ -33,6 +33,14 @@ test.describe('E2E build ayrımı', () => {
     if (real) expect(demo.includes(real), 'real Supabase URL in demo build').toBe(false);
   });
 
+  test('gerçek proje yapılandırması antrenman senkronizasyonunu açmaz (tablolar canlıda yok — Phase 3F)', () => {
+    // Until the training migration is applied with approval, a real build must
+    // never query or write workouts. Remove this guard in Phase 3F.
+    const envFile = join(ROOT, '.env');
+    const value = existsSync(envFile) ? /^EXPO_PUBLIC_TRAINING_SYNC=(.*)$/m.exec(readFileSync(envFile, 'utf8'))?.[1].trim() : undefined;
+    expect(value ?? '').not.toBe('1');
+  });
+
   test('mock build yalnızca .invalid sahte adresi kullanır', () => {
     const mock = bundleText('dist-mock');
     expect(mock).toContain('https://skor-e2e.invalid');

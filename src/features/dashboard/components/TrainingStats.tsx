@@ -7,7 +7,7 @@ import { stagger } from '@/theme/motion';
 
 import type { DashboardSnapshot } from '../dashboard-data';
 
-type Stat = { icon: IconName; label: string; value: number; decimals?: number; format: (n: number) => string; unit: string };
+type Stat = { icon: IconName; label: string; value: number | null; decimals?: number; format: (n: number) => string; unit: string; testID: string };
 
 const tr = (n: number, decimals = 0) => n.toLocaleString('tr-TR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 const duration = (minutes: number) => {
@@ -15,13 +15,13 @@ const duration = (minutes: number) => {
   return h > 0 ? `${h} sa ${minutes % 60}` : String(minutes);
 };
 
-/** Four stat tiles; each value counts up, one tile after another. */
+/** This week's logged training. Values count up one tile after another; "—" when there is nothing to show. */
 export function TrainingStats({ stats }: { stats: DashboardSnapshot['stats'] }) {
   const items: Stat[] = [
-    { icon: 'calendar-check', label: 'Antrenman', value: stats.sessions, format: (n) => String(n), unit: 'seans' },
-    { icon: 'timer-outline', label: 'Toplam süre', value: stats.minutes, format: duration, unit: 'dk' },
-    { icon: 'fire', label: 'Yakılan', value: stats.calories, format: (n) => tr(n), unit: 'kcal' },
-    { icon: 'speedometer', label: 'Ort. yoğunluk', value: stats.avgIntensity, decimals: 1, format: (n) => tr(n, 1), unit: '/10' },
+    { icon: 'calendar-check', label: 'Antrenman', value: stats.sessions, format: (n) => String(n), unit: 'seans', testID: 'stat-sessions' },
+    { icon: 'timer-outline', label: 'Toplam süre', value: stats.minutes, format: duration, unit: 'dk', testID: 'stat-minutes' },
+    { icon: 'check', label: 'Tamamlanan set', value: stats.sets, format: (n) => String(n), unit: 'set', testID: 'stat-sets' },
+    { icon: 'speedometer', label: 'Ort. zorluk', value: stats.avgRpe, decimals: 1, format: (n) => tr(n, 1), unit: 'RPE', testID: 'stat-rpe' },
   ];
   return (
     <View style={styles.grid}>
@@ -34,12 +34,18 @@ export function TrainingStats({ stats }: { stats: DashboardSnapshot['stats'] }) 
             <AppText variant="small" color="textMuted">
               {s.label}
             </AppText>
-            <AppText variant="statM" numberOfLines={1} adjustsFontSizeToFit accessibilityLabel={`${s.label} ${s.format(s.value)} ${s.unit}`}>
-              <AnimatedNumber value={s.value} decimals={s.decimals} format={s.format} delay={120 + i * stagger} variant="statM" />{' '}
-              <AppText variant="small" color="textMuted">
-                {s.unit}
+            {s.value === null ? (
+              <AppText variant="statM" color="textFaint" testID={s.testID} accessibilityLabel={`${s.label}: veri yok`}>
+                —
               </AppText>
-            </AppText>
+            ) : (
+              <AppText variant="statM" numberOfLines={1} adjustsFontSizeToFit accessibilityLabel={`${s.label} ${s.format(s.value)} ${s.unit}`}>
+                <AnimatedNumber value={s.value} decimals={s.decimals} format={s.format} delay={120 + i * stagger} variant="statM" testID={s.testID} />{' '}
+                <AppText variant="small" color="textMuted">
+                  {s.unit}
+                </AppText>
+              </AppText>
+            )}
           </View>
         </Card>
       ))}

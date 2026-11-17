@@ -14,6 +14,7 @@ export default function ModuleScreen() {
   if (!isModuleId(id)) return <Redirect href="/" />;
   const module = MODULES[id];
   if (module.tabRoute) return <Redirect href={module.tabRoute} />;
+  if (module.route) return <Redirect href={module.route} />;
 
   return (
     <Screen>

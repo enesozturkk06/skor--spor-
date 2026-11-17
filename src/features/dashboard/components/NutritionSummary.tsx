@@ -1,65 +1,47 @@
 import { StyleSheet, View } from 'react-native';
 
-import { AnimatedNumber } from '@/components/motion/AnimatedNumber';
-import { AppText, Card, ProgressBar, ProgressRing, Tag } from '@/components/ui';
+import { AppText, Card, Tag } from '@/components/ui';
 import { colors, spacing } from '@/theme';
-import { stagger } from '@/theme/motion';
 
 import type { DashboardSnapshot } from '../dashboard-data';
 
 const MACRO_COLORS = { protein: colors.orange, carbs: colors.gold, fat: colors.petrolBright } as const;
-const RING_DELAY = 150;
-const MACRO_DELAY = 260;
 const trInt = (n: number) => n.toLocaleString('tr-TR');
 
-type Props = { nutrition: DashboardSnapshot['nutrition']; onPress?: () => void; isSample?: boolean };
+type Props = { nutrition: DashboardSnapshot['nutrition']; onPress?: () => void };
 
-export function NutritionSummary({ nutrition, onPress, isSample = false }: Props) {
-  const left = Math.max(0, nutrition.kcalTarget - nutrition.kcal);
+/**
+ * Nutrition tracking is not live: only the daily targets computed from the
+ * profile are shown. No intake numbers until the athlete can log meals.
+ */
+export function NutritionSummary({ nutrition, onPress }: Props) {
   return (
-    <Card onPress={onPress} accessibilityLabel="Beslenme özeti" style={styles.card}>
-      <View style={styles.titleRow}>
+    <Card onPress={onPress} accessibilityLabel="Beslenme: yakında. Günlük hedeflerin" style={styles.card}>
+      <View style={styles.titleRow} testID="nutrition-card">
         <AppText variant="overline" color="textMuted">
           Beslenme
         </AppText>
-        {isSample ? <Tag label="Örnek" tone="gold" /> : null}
+        <Tag label="Yakında" tone="gold" />
       </View>
-      <View style={styles.row}>
-        <ProgressRing
-          progress={nutrition.kcal / nutrition.kcalTarget}
-          size={96}
-          stroke={9}
-          color={colors.gold}
-          animated
-          delay={RING_DELAY}
-          accessibilityLabel={`${nutrition.kcal} / ${nutrition.kcalTarget} kalori`}
-        >
-          <AnimatedNumber value={nutrition.kcal} format={trInt} delay={RING_DELAY} variant="statM" />
-          <AppText variant="overline" color="textMuted" style={styles.kcal}>
-            kcal
-          </AppText>
-        </ProgressRing>
-        <View style={styles.macros}>
-          {nutrition.macros.map((m, i) => (
-            <View key={m.key} style={styles.macro}>
-              <View style={styles.macroHead}>
-                <AppText variant="small" color="textMuted">
-                  {m.label}
-                </AppText>
-                <AppText variant="smallStrong">
-                  {m.grams}
-                  <AppText variant="small" color="textFaint">
-                    /{m.target}g
-                  </AppText>
-                </AppText>
-              </View>
-              <ProgressBar progress={m.grams / m.target} color={MACRO_COLORS[m.key]} height={5} animated delay={MACRO_DELAY + i * stagger} />
-            </View>
-          ))}
-        </View>
+      <AppText variant="statM" style={styles.kcal}>
+        {trInt(nutrition.kcalTarget)}{' '}
+        <AppText variant="small" color="textMuted">
+          kcal / gün hedefi
+        </AppText>
+      </AppText>
+      <View style={styles.macros}>
+        {nutrition.macros.map((m) => (
+          <View key={m.key} style={styles.macro}>
+            <View style={[styles.dot, { backgroundColor: MACRO_COLORS[m.key] }]} />
+            <AppText variant="small" color="textMuted" style={styles.flex}>
+              {m.label}
+            </AppText>
+            <AppText variant="smallStrong">{m.target} g</AppText>
+          </View>
+        ))}
       </View>
-      <AppText variant="small" color="textMuted" style={styles.foot}>
-        Hedefe <AppText variant="smallStrong">{trInt(left)} kcal</AppText> kaldı
+      <AppText variant="small" color="textFaint" style={styles.foot}>
+        Hedefler profilinden (kilo ve hedefler) hesaplanır. Öğün takibi açıldığında burada ilerlemen görünecek.
       </AppText>
     </Card>
   );
@@ -67,11 +49,11 @@ export function NutritionSummary({ nutrition, onPress, isSample = false }: Props
 
 const styles = StyleSheet.create({
   card: { flexGrow: 1, flexBasis: 300 },
+  flex: { flex: 1 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg, marginTop: spacing.md },
-  kcal: { fontSize: 9 },
-  macros: { flex: 1, gap: spacing.md },
-  macro: { gap: spacing.xs },
-  macroHead: { flexDirection: 'row', justifyContent: 'space-between' },
-  foot: { marginTop: spacing.lg },
+  kcal: { marginTop: spacing.md },
+  macros: { gap: spacing.sm, marginTop: spacing.md },
+  macro: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  dot: { width: 8, height: 8, borderRadius: 4 },
+  foot: { marginTop: spacing.md },
 });

@@ -1,35 +1,41 @@
 import { getSport, type GoalId } from '@/features/athlete/catalog';
 import type { AthleteProfile } from '@/features/athlete/types';
+import { dayKey, inWindow, minutesByDay, streakDays, weekStart } from '@/features/training/progress';
+import type { WorkoutEntry } from '@/features/training/types';
+import { durationMinutes } from '@/features/training/workout-model';
 
-import { computeAthleteScore, type ScoreBreakdown } from './athlete-score';
+import { SCORE_WINDOW_DAYS, computeTrainingScore, type TrainingScore } from './athlete-score';
+
+/** How much of the history is on the device (it is loaded newest first, page by page). */
+export type HistoryCoverage = { complete: boolean; loadedUntil: string | null };
 
 export type WeekDay = { label: string; minutes: number; isToday: boolean; isFuture: boolean };
 
+/**
+ * Everything on the home screen. Training numbers come from the athlete's
+ * logged workouts. Nutrition and recovery are not tracked yet: only the
+ * targets derived from the profile are shown, never invented intake or
+ * readiness values.
+ */
 export type DashboardSnapshot = {
-  /** True while activity tracking is not live — UI must disclose this. */
-  isSample: boolean;
   week: WeekDay[];
   todayMinutes: number;
   dailyTargetMinutes: number;
   streakDays: number;
-  stats: { sessions: number; minutes: number; calories: number; avgIntensity: number };
-  nutrition: {
-    kcal: number;
-    kcalTarget: number;
-    macros: { key: 'protein' | 'carbs' | 'fat'; label: string; grams: number; target: number }[];
-  };
-  recovery: { readiness: number; sleepHours: number; restingHr: number; status: string };
-  score: ScoreBreakdown;
-  scoreDelta: number;
+  /** This calendar week (Mon–Sun). avgRpe is null when no workout had an RPE. */
+  stats: { sessions: number; minutes: number; sets: number; avgRpe: number | null };
+  /** Targets only (from weight and goals). */
+  nutrition: { kcalTarget: number; macros: { key: 'protein' | 'carbs' | 'fat'; label: string; target: number }[] };
+  score: TrainingScore;
+  /** True when the athlete has never finished a workout. */
+  empty: boolean;
 };
 
 const DAY_LABELS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
 
-/** Sample training minutes per weekday until real tracking ships. */
-const SAMPLE_MINUTES = [52, 0, 64, 45, 70, 38, 55];
-const SAMPLE_TODAY_PARTIAL = 32;
-
-const DAILY_TARGET_BY_CATEGORY = { strength: 50, combat: 60, team: 60, endurance: 45, racket: 50 } as const;
+export const DAILY_TARGET_BY_CATEGORY = { strength: 50, combat: 60, team: 60, endurance: 45, racket: 50 } as const;
+/** Training days per week that give full "frequency" marks. */
+export const TARGET_DAYS = 4;
 
 /** Goal-based kcal multiplier on a simple maintenance estimate. */
 function kcalTarget(weightKg: number, goals: GoalId[]): number {
@@ -46,70 +52,53 @@ function macroTargets(weightKg: number, kcal: number, goals: GoalId[]) {
   return { protein, carbs, fat };
 }
 
-function streakFrom(week: WeekDay[], todayIndex: number): number {
-  let streak = 0;
-  // Today counts if trained; otherwise start from yesterday.
-  let i = week[todayIndex].minutes > 0 ? todayIndex : todayIndex - 1;
-  while (i >= 0 && week[i].minutes > 0) {
-    streak += 1;
-    i -= 1;
-  }
-  return streak;
-}
-
-export function buildDashboardSnapshot(profile: AthleteProfile, now = new Date()): DashboardSnapshot {
-  const todayIndex = (now.getDay() + 6) % 7; // Monday = 0
-  const week: WeekDay[] = DAY_LABELS.map((label, i) => ({
-    label,
-    minutes: i < todayIndex ? SAMPLE_MINUTES[i] : i === todayIndex ? SAMPLE_TODAY_PARTIAL : 0,
-    isToday: i === todayIndex,
-    isFuture: i > todayIndex,
-  }));
+export function buildDashboardSnapshot(
+  profile: AthleteProfile,
+  history: readonly WorkoutEntry[],
+  now = new Date(),
+  coverage: HistoryCoverage = { complete: true, loadedUntil: null },
+): DashboardSnapshot {
+  // Every workout the score reads must be loaded — never a score from part of the window.
+  const windowStart = now.getTime() - SCORE_WINDOW_DAYS * 86_400_000;
+  const covered = coverage.complete || (coverage.loadedUntil !== null && Date.parse(coverage.loadedUntil) <= windowStart);
+  const monday = weekStart(now);
+  const todayIndex = (now.getDay() + 6) % 7;
+  const byDay = minutesByDay(history);
+  const week: WeekDay[] = DAY_LABELS.map((label, i) => {
+    const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+    return { label, minutes: i > todayIndex ? 0 : (byDay.get(dayKey(d)) ?? 0), isToday: i === todayIndex, isFuture: i > todayIndex };
+  });
 
   const dailyTargetMinutes = DAILY_TARGET_BY_CATEGORY[getSport(profile.primarySport).category];
-  const weekMinutes = week.reduce((sum, d) => sum + d.minutes, 0);
-  const activeDays = week.filter((d) => d.minutes > 0).length;
-  const sessions = activeDays;
+  const thisWeek = inWindow(history, { from: monday, to: now });
+  const rpes = thisWeek.map((w) => w.rpe).filter((r): r is number => r !== null);
 
   const target = kcalTarget(profile.weightKg, profile.goals);
   const macros = macroTargets(profile.weightKg, target, profile.goals);
-  const nutrition: DashboardSnapshot['nutrition'] = {
-    kcal: Math.round(target * 0.62),
-    kcalTarget: target,
-    macros: [
-      { key: 'protein', label: 'Protein', grams: Math.round(macros.protein * 0.7), target: macros.protein },
-      { key: 'carbs', label: 'Karbonhidrat', grams: Math.round(macros.carbs * 0.58), target: macros.carbs },
-      { key: 'fat', label: 'Yağ', grams: Math.round(macros.fat * 0.55), target: macros.fat },
-    ],
-  };
-
-  const recovery = { readiness: 78, sleepHours: 7.2, restingHr: 56, status: 'Antrenmana hazır' };
-
-  const score = computeAthleteScore({
-    activeDays,
-    weeklyMinutes: weekMinutes,
-    weeklyTargetMinutes: dailyTargetMinutes * 5,
-    recovery: recovery.readiness,
-    nutritionAdherence: 0.71,
-  });
 
   return {
-    isSample: true,
     week,
     todayMinutes: week[todayIndex].minutes,
     dailyTargetMinutes,
-    streakDays: streakFrom(week, todayIndex),
+    streakDays: streakDays(history, now),
     stats: {
-      sessions,
-      minutes: weekMinutes,
-      // ~7 kcal/min is a mid-intensity average across sports.
-      calories: Math.round(weekMinutes * 7.2),
-      avgIntensity: 7.4,
+      sessions: thisWeek.length,
+      minutes: thisWeek.reduce((n, w) => n + durationMinutes(w), 0),
+      sets: thisWeek.reduce((n, w) => n + w.sets.length, 0),
+      avgRpe: rpes.length ? Math.round((rpes.reduce((a, b) => a + b, 0) / rpes.length) * 10) / 10 : null,
     },
-    nutrition,
-    recovery,
-    score,
-    scoreDelta: 3,
+    nutrition: {
+      kcalTarget: target,
+      macros: [
+        { key: 'protein', label: 'Protein', target: macros.protein },
+        { key: 'carbs', label: 'Karbonhidrat', target: macros.carbs },
+        { key: 'fat', label: 'Yağ', target: macros.fat },
+      ],
+    },
+    score: covered
+      ? computeTrainingScore(history, { targetDays: TARGET_DAYS, weeklyTargetMinutes: dailyTargetMinutes * TARGET_DAYS }, now)
+      : { status: 'loading' },
+    empty: !history.some((e) => e.sync !== 'rejected'),
   };
 }
 

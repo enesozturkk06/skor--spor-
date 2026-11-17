@@ -19,6 +19,27 @@ test.describe('Responsive yerleşim', () => {
     await expectNoHorizontalOverflow(page);
   });
 
+  test('egzersiz kütüphanesi ve detayı taşmaz; geniş ekranda filtreler yanda, liste sağda', async ({ app, page }) => {
+    await app.onboardedUser();
+    await page.goto('/exercises');
+    const count = page.getByTestId('library-count');
+    await expect(count).toBeVisible({ timeout: 30_000 });
+    await page.waitForTimeout(1200); // entrances done
+    await expectNoHorizontalOverflow(page);
+    const map = (await page.getByTestId('library-map').boundingBox())!;
+    const list = (await page.getByTestId('exercise-bench_press').boundingBox())!;
+    if (page.viewportSize()!.width >= 900) {
+      expect(list.x, 'list to the right of the map').toBeGreaterThan(map.x + map.width);
+    } else {
+      expect(list.y, 'list below the map').toBeGreaterThan(map.y + map.height);
+    }
+
+    await page.goto('/exercises/kettlebell_swing');
+    await expect(page.getByTestId('exercise-title')).toBeVisible({ timeout: 30_000 });
+    await page.waitForTimeout(1200);
+    await expectNoHorizontalOverflow(page);
+  });
+
   test('üst üste açılan ekranlarda SVG kimlikleri benzersiz (logo ve arka plan boyanır)', async ({ app, page }) => {
     // Sign-in is pushed over the still-mounted welcome screen: two logos, two backdrops.
     await app.openSignIn();

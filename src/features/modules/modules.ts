@@ -18,6 +18,8 @@ export type AppModule = {
   icon: IconName;
   /** Route for modules that live in the tab bar; others open /module/[id]. */
   tabRoute?: '/' | '/training' | '/nutrition' | '/coach' | '/profile';
+  /** Stack route of a live module outside the tab bar. */
+  route?: '/exercises';
   status: 'live' | 'soon';
   /** Planned capabilities, shown on the module's preview screen. */
   roadmap: string[];
@@ -37,9 +39,10 @@ export const MODULES: Record<ModuleId, AppModule> = {
   exercises: {
     id: 'exercises',
     title: 'Egzersiz Kütüphanesi',
-    tagline: 'Teknik ve video rehber',
+    tagline: 'Teknik, kas haritası, set önerisi',
     icon: 'bookshelf',
-    status: 'soon',
+    route: '/exercises',
+    status: 'live',
     roadmap: ['Kas grubu ve ekipmana göre filtre', 'Adım adım teknik anlatımı', 'Dövüş sporları kombinasyon kütüphanesi', 'Favoriler ve kendi egzersizlerin'],
   },
   nutrition: {

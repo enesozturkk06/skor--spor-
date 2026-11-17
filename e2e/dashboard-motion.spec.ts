@@ -1,13 +1,19 @@
 /**
- * Phase 1: animated, interactive dashboard (demo build).
- * Date is pinned to Thu 12 Nov 2026 so the sample week is deterministic:
- * Mon 52, Tue 0, Wed 64, Thu (today) 32, Fri–Sun in the future.
+ * Animated, interactive dashboard (demo build), fed by REAL logged workouts
+ * (Phase 3E). Date is pinned to Thu 12 Nov 2026 and three workouts are
+ * seeded: Mon 52 min, Wed 64 min, Thu (today, morning) 32 min; Fri–Sun are
+ * in the future. Three workouts = the score is calibrated.
  */
 import type { Page } from '@playwright/test';
 
-import { expect, makeUser, test, type App } from './fixtures';
+import { expect, makeUser, seedDemoWorkouts, test, type App } from './fixtures';
 
 const THURSDAY = new Date('2026-11-12T10:00:00+03:00');
+const WEEK = [
+  { start: new Date('2026-11-09T18:00:00+03:00'), minutes: 52 },
+  { start: new Date('2026-11-11T18:00:00+03:00'), minutes: 64 },
+  { start: new Date('2026-11-12T08:00:00+03:00'), minutes: 32 },
+];
 
 /**
  * Starts recording the Athlete Score text from the moment it appears, every
@@ -62,10 +68,20 @@ const flameTransforms = (page: Page, ms: number) =>
     ms,
   );
 
-/** Signs up and onboards, recording the score from its first frame on the dashboard. */
-async function onboardAndRecord(app: App, page: Page) {
+/**
+ * Signs up, logs this week's workouts on the device, onboards, and records
+ * the score from its first frame on the dashboard.
+ */
+async function onboardAndRecord(app: App, page: Page, seed = true) {
   await page.clock.setFixedTime(THURSDAY);
   await app.signUp(makeUser());
+  if (seed) {
+    await seedDemoWorkouts(page, WEEK);
+    await page.reload(); // the app reads the history on start; onboarding resumes
+    const intro = app.button('Başlayalım');
+    await expect(intro.or(app.text('Ana branşın'))).toBeVisible({ timeout: 30_000 });
+    if (await intro.isVisible()) await app.startOnboarding();
+  }
   const recording = recordScore(page); // starts watching before the dashboard mounts
   await app.completeOnboarding();
   await app.expectDashboard();
@@ -121,12 +137,29 @@ test.describe('Ana ekran animasyonları', () => {
     expect(new Set(paused).size, 'no animation while the tab is hidden').toBe(1);
   });
 
-  test('örnek veriler açıkça işaretlenir', async ({ app, page }) => {
+  test('hiçbir örnek veri yok: antrenman gerçek, beslenme ve recovery yakında (değersiz)', async ({ app, page }) => {
     await onboardAndRecord(app, page);
-    await expect(page.getByRole('alert').filter({ hasText: 'Örnek veri.' })).toBeVisible();
-    await expect(app.text('Bu hafta · Örnek veri')).toBeVisible();
-    // Weekly chart, nutrition and recovery each carry an "Örnek" tag.
-    await expect(page.getByText(/^ÖRNEK$/)).toHaveCount(3);
+    await expect(page.getByText(/ÖRNEK|Örnek veri/)).toHaveCount(0);
+    await expect(page.getByTestId('stat-sessions')).toHaveText('3');
+    await expect(page.getByTestId('stat-minutes')).toHaveText('2 sa 28'); // 148 dk
+    await expect(page.getByTestId('nutrition-card')).toContainText('YAKINDA');
+    await expect(page.getByTestId('recovery-card')).toContainText('YAKINDA');
+    // No intake, readiness, sleep or heart-rate numbers anywhere.
+    await expect(page.getByText(/\d+ ?bpm|kcal kaldı|^\d+%$|^\d+([.,]\d)? sa$/)).toHaveCount(0);
+    await app.button('Skor neye dayanıyor?').click();
+    await expect(page.getByTestId('score-part-frequency')).toContainText('3 / 4 gün');
+    await expect(page.getByTestId('score-part-volume')).toContainText('148 / 240 dk'); // Boks: 4 × 60 dk
+    await expect(page.getByTestId('score-scope')).toContainText('yalnızca kaydettiğin antrenmanlara');
+  });
+
+  test('yeni sporcu: skor kalibre edilir, sayı gösterilmez; hafta boş', async ({ app, page }) => {
+    await onboardAndRecord(app, page, false);
+    await expect(page.getByTestId('score-calibrating')).toBeVisible();
+    await expect(page.getByTestId('calibration-count')).toHaveText('0/3');
+    await expect(page.getByTestId('athlete-score')).toHaveCount(0);
+    await expect(page.getByTestId('week-total')).toHaveText('0');
+    await expect(page.getByTestId('streak-days')).toHaveText('0');
+    await expect(page.getByTestId('stat-rpe')).toHaveText('—');
   });
 
   test('web: Yenile butonu profili arka planda yeniler, ekranı silmez', async ({ app, page }) => {

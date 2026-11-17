@@ -13,6 +13,7 @@ import { AthleteProvider, useAthlete } from '@/features/athlete/AthleteProvider'
 import { ProfileLoadError } from '@/features/athlete/components/ProfileLoadError';
 import { AuthProvider, useAuth } from '@/features/auth/AuthProvider';
 import { DashboardSkeleton } from '@/features/dashboard/components/DashboardSkeleton';
+import { TrainingProvider } from '@/features/training/TrainingProvider';
 import { colors } from '@/theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {
@@ -44,8 +45,10 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <AuthProvider>
           <AthleteProvider>
-            <StatusBar style="light" />
-            <RootNavigator />
+            <TrainingProvider>
+              <StatusBar style="light" />
+              <RootNavigator />
+            </TrainingProvider>
           </AthleteProvider>
         </AuthProvider>
       </SafeAreaProvider>
@@ -94,6 +97,18 @@ function RootNavigator() {
       <Stack.Protected guard={signedIn && onboarded} redirectTo={signedIn ? '/onboarding' : '/welcome'}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="module/[id]" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="exercises/index" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="exercises/[key]" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="workout/index" options={{ animation: 'slide_from_bottom', gestureEnabled: false }} />
+        <Stack.Screen name="workout/add" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="programs/index" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="programs/[id]" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="programs/edit" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="history/index" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="history/[id]" options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="records" options={{ animation: 'slide_from_right' }} />
+        {/* Dev/E2E-only harness for the training data layer (redirects in production). */}
+        <Stack.Screen name="training-lab" />
         <Stack.Screen name="profile-edit" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
       </Stack.Protected>
     </Stack>

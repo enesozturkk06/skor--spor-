@@ -57,3 +57,9 @@ supabase/.branches/
 supabase/.env
 supabase/.env.*
 /dist-mock/
+
+# Cloudflare (wrangler CLI local state)
+.wrangler/
+
+# Personal editor / assistant settings
+.claude/settings.local.json

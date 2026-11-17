@@ -45,7 +45,7 @@ export function SummaryStep({ name, primary, secondary, goals, age, heightCm, we
     weightKg,
     createdAt: '',
     updatedAt: '',
-  });
+  }, []);
   const item = (i: number) => enter(i, { delay: CARD_DELAY + 260 });
 
   return (

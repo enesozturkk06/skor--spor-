@@ -4,17 +4,76 @@
 
 Expo (SDK 58) · React Native 0.88 · TypeScript · Expo Router · Supabase · Web / iOS / Android
 
-## Çalıştırma
+## Yerel geliştirme
+
+Gereksinim: Node.js 24 (`.node-version`), npm.
 
 ```bash
 npm install
-npm run web        # tarayıcı
+npm run web        # tarayıcı (geliştirme sunucusu)
 npm start          # Expo Go / emülatör için QR
 npm run typecheck  # tsc --noEmit
 npm run lint       # expo lint
 npm test           # Playwright uçtan uca testleri
 npm run check      # typecheck + lint + E2E (commit öncesi)
 ```
+
+`.env` dosyası yoksa uygulama **Demo modunda** çalışır (aşağıya bakın). `.env` asla Git'e eklenmez; yalnızca boş şablon `.env.example` depodadır.
+
+## Demo modu
+
+Supabase anahtarları tanımlı değilse uygulama arka uç olmadan çalışır:
+
+- Hesap (ad, e-posta), profil, antrenmanlar, programlar ve rekorlar **yalnızca o tarayıcının / cihazın depolamasında** tutulur (`skorspor:` önekli anahtarlar). Sunucuya hiçbir kullanıcı verisi gitmez; şifre hiç saklanmaz.
+- Ekranlarda "Demo modu · Veriler yalnızca bu cihazda saklanır" uyarısı görünür.
+- Tarayıcı verisi silinirse veya başka bir cihaz kullanılırsa demo verileri görünmez — bu, demonun doğasıdır.
+
+## Test sitesi (Cloudflare Pages, ücretsiz)
+
+Herkese açık test sitesi **yalnızca demo modundadır**: gerçek Supabase bağlantısı yoktur, gerçek kullanıcı verisi kullanılmaz. Ücretli hiçbir hizmet kullanılmaz (GitHub Free + Cloudflare Pages Free, ücretsiz `*.pages.dev` alt alan adı).
+
+| Ortam | Branch | Adres |
+| --- | --- | --- |
+| Test sitesi (preview) | `develop` | `https://develop.<proje>.pages.dev` — her push'ta güncellenir |
+| Özellik denemeleri | `feature/*` | `https://<branch>.<proje>.pages.dev` |
+| Production | `main` | `https://<proje>.pages.dev` — otomatik deploy **kapalı**, yalnızca onayla elle |
+
+Cloudflare Pages proje ayarları:
+
+| Ayar | Değer |
+| --- | --- |
+| Framework preset | None |
+| Build command | `node scripts/pages-guard.mjs && npx expo export -p web` |
+| Build output directory | `dist` |
+| Root directory | `/` |
+| Node.js | `.node-version` dosyasından (24) |
+| Ortam değişkenleri | **Hiçbiri** (Production ve Preview) |
+| Automatic production deployments | Kapalı |
+| Preview branch'leri | Custom: `develop`, `feature/*` |
+
+Notlar:
+
+- **Build koruması:** `scripts/pages-guard.mjs` aşağıdakilerden biri varsa build'i durdurur ve yalnızca adları yazar (değerleri asla):
+  - **herhangi bir** `EXPO_PUBLIC_*` değişkeni (Expo bunların hepsini pakete gömer; demo hiçbirine ihtiyaç duymaz — `EXPO_PUBLIC_SUPABASE_*`, `EXPO_PUBLIC_TRAINING_SYNC`, `EXPO_PUBLIC_MOTION_LAB` ve yanlış yazılmış adlar dahil),
+  - kimlik bilgisi gibi görünen adlar: `*SUPABASE*`, `*SERVICE_ROLE*`, `DATABASE_URL`, `POSTGRES*`, `PG*PASSWORD`, `*JWT_SECRET*`,
+  - checkout'ta `.env` / `.env.*` dosyası, doldurulmuş `.env.example`,
+  - `app.config.*`, `babel.config.*`, `metro.config.*` (değer gömebilirler — eklenirse önce koruma gözden geçirilmeli),
+  - `"single"` dışında bir web çıktısı,
+  - `app.json` veya `src/` içine yazılmış Supabase adresi, anahtarı ya da JWT.
+
+  Yerelde aynı build: `npm run build:pages` (yerelde `.env` varsa koruma bilerek durur). Koruma, Cloudflare panelindeki build komutuna bağlıdır; bu komutu yalnızca hesap sahibi değiştirebilir.
+- **SPA yönlendirmesi:** Web çıktısı tek sayfalık uygulamadır (`web.output: "single"`) ve çıktıda `404.html` yoktur; Cloudflare Pages bu durumda dosyaya karşılık gelmeyen her yol için `index.html` sunar. Bu yüzden `/exercises/bench_press`, `/history/<id>` gibi dinamik rotalar doğrudan açılır. `_redirects` dosyası **eklenmemelidir**; `404.html` eklenirse bu davranış bozulur (testler yakalar).
+- **Başlıklar:** `public/_headers` (export sırasında `dist/` içine kopyalanır): `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy`, `X-Robots-Tag: noindex` (arama motorlarına kapalı) ve içerik özetli (hash'li) Expo dosyaları için kalıcı önbellek.
+- **Ücretsiz plan sınırları:** ayda 500 build, aynı anda 1 build, build başına 20 dk, site başına 20.000 dosya, dosya başına 25 MiB, `_headers` için 100 kural. Mevcut çıktı ≈ 61 dosya / 3,7 MB.
+- Test sitesi herkese açıktır: içine gerçek kişisel bilgi girmeyin; her ziyaretçinin verisi yalnızca kendi tarayıcısında kalır.
+
+## GitHub branch düzeni
+
+- Depo: `skor-spor` (GitHub Free, **private**).
+- `main`: yayın (production) kodu. Doğrudan geliştirme yapılmaz; yalnızca onaylanan değişiklikler birleştirilir. (GitHub Free'de private depolarda branch koruma kuralı olmadığından bu kural süreçle uygulanır; ayrıca Cloudflare'de production otomatik deploy kapalıdır.)
+- `develop`: günlük geliştirme ve test sitesi.
+- `feature/<kısa-ad>`: gerektiğinde ayrı özellik branch'leri; `develop`'a birleştirilir.
+- Gizli bilgiler (`.env`, anahtarlar, sertifikalar, token'lar) ve üretilen klasörler (`node_modules/`, `dist/`, test raporları, `.wrangler/`) `.gitignore` ile depo dışındadır.
 
 ## Testler
 
@@ -33,11 +92,13 @@ Uçtan uca testler [e2e/](e2e/) klasöründe, Playwright ile yazıldı. Testler 
 - İlk kurulumda tarayıcı yoksa: `npx playwright install chromium`.
 - Ortak adımlar ve seçiciler [e2e/fixtures.ts](e2e/fixtures.ts) içindedir. Büyük harfle gösterilen başlıklar `tr-TR` ile eşleştirilir.
 
-## Web yayını (deploy) notu
+## Web derlemesini yerelde sunma
 
-Web derlemesi tek sayfalık uygulamadır (`web.output: "single"`). Barındırma servisinde **tüm uygulama rotalarını `index.html`'e yönlendiren (SPA fallback) kural zorunludur**; aksi halde `/welcome`, `/onboarding` gibi sayfalar yenilendiğinde 404 döner. `expo serve` bu kuralı uygulamaz; yerelde `npm run build:web && npm run serve:web` kullanın.
+Web derlemesi tek sayfalık uygulamadır (`web.output: "single"`); barındırma tarafında bilinmeyen yollar `index.html`'e düşmelidir (Cloudflare Pages bunu kendiliğinden yapar). `expo serve` bu kuralı uygulamaz; yerelde `npm run build:web && npm run serve:web` kullanın.
 
 ## Supabase bağlantısı
+
+> Herkese açık test sitesi Supabase'e **bağlanmaz** (yukarıdaki "Test sitesi" bölümü). Bu bölüm yalnızca yerel geliştirme ve ileride onaylanacak gerçek yayın içindir.
 
 Anahtarlar yoksa uygulama **Demo modunda** çalışır: hesap bilgisi (ad, e-posta) yalnızca cihazda tutulur, şifre hiç saklanmaz. Ekranlarda bu durum açıkça belirtilir.
 
@@ -106,6 +167,11 @@ supabase/migrations/      Veritabanı şeması
 | Özellik | Durum |
 | --- | --- |
 | Açılış, giriş, kayıt, onboarding, dashboard, profil, profil düzenleme | ✅ Çalışıyor |
-| Supabase auth + profil senkronizasyonu | ✅ Kodlandı, anahtar girilince aktif (henüz canlı test edilmedi) |
-| Dashboard aktivite rakamları | ⚠️ Örnek veri (ekranda belirtiliyor); kalori/makro/süre hedefleri profilden hesaplanır |
-| Antrenman, Beslenme, AI Koç, Egzersiz, Recovery, Performans, Topluluk | 🚧 Önizleme ekranı + yol haritası |
+| Supabase auth + profil senkronizasyonu | ✅ Kodlandı ve sahte API ile test edildi; canlı şema/güvenlik testleri geçti, gerçek hesapla uçtan uca test henüz raporlanmadı (test sitesi demo) |
+| Egzersiz kütüphanesi, aktif antrenman, programlar, geçmiş, rekorlar | ✅ Çalışıyor (antrenman verisinin sunucu senkronu, migration onayına kadar kapalı) |
+| Dashboard / Athlete Score | ✅ Kaydedilen antrenmanlardan hesaplanır; Beslenme ve Recovery "Yakında" (değer gösterilmez) |
+| Beslenme, AI Koç, Recovery, Performans, Topluluk | 🚧 Önizleme ekranı + yol haritası |
+
+## Lisans
+
+Copyright © 2026 SKOR SPOR. All rights reserved. Ayrıntı: [LICENSE](LICENSE).

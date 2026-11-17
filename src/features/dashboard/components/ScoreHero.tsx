@@ -4,22 +4,72 @@ import { AnimatedNumber } from '@/components/motion/AnimatedNumber';
 import { AppText, Card, Icon, ProgressBar, ProgressRing, Tag } from '@/components/ui';
 import { colors, gradients, spacing } from '@/theme';
 
-import { SCORE_WEIGHTS, scoreTier, type ScoreBreakdown } from '../athlete-score';
-
-type Props = { score: ScoreBreakdown; delta: number };
-
-const PILLARS = [
-  { key: 'training', label: 'Antrenman', color: colors.dataTraining, weight: SCORE_WEIGHTS.training },
-  { key: 'recovery', label: 'Toparlanma', color: colors.dataRecovery, weight: SCORE_WEIGHTS.recovery },
-  { key: 'nutrition', label: 'Beslenme', color: colors.dataNutrition, weight: SCORE_WEIGHTS.nutrition },
-] as const;
+import { scoreTier, type TrainingScore } from '../athlete-score';
 
 /** Choreography: score and ring start together, the pillars follow one by one. */
 const SCORE_DELAY = 120;
 const PILLAR_DELAY = 320;
-const PILLAR_STEP = 90;
 
-export function ScoreHero({ score, delta }: Props) {
+/**
+ * Athlete Score. Before the calibration threshold no number is shown at all
+ * (progress towards it instead). Recovery and nutrition are labelled "Yakında"
+ * — they are not part of the score until their modules exist.
+ */
+export function ScoreHero({ score }: { score: TrainingScore }) {
+  if (score.status === 'loading') {
+    // History arrives page by page; no number until the whole score window is here.
+    return (
+      <Card variant="hero" accent="gold" style={styles.card}>
+        <View style={styles.headline} testID="score-loading" accessibilityLiveRegion="polite">
+          <AppText variant="overline" color="gold">
+            Athlete Score
+          </AppText>
+          <AppText variant="h2">Hesaplanıyor</AppText>
+          <AppText variant="small" color="textMuted">
+            Son 5 haftanın antrenmanları yükleniyor. Skor, bu aralıktaki tüm kayıtların tamamı gelince gösterilir.
+          </AppText>
+        </View>
+        <Pillars training={null} />
+      </Card>
+    );
+  }
+  if (score.status === 'calibrating') {
+    return (
+      <Card variant="hero" accent="gold" style={styles.card}>
+        <View style={styles.top} testID="score-calibrating">
+          <View style={styles.headline}>
+            <AppText variant="overline" color="gold">
+              Athlete Score
+            </AppText>
+            <AppText variant="h2">Kalibre ediliyor</AppText>
+            <AppText variant="small" color="textMuted">
+              Skorun {score.needed} antrenmandan sonra hesaplanır. Az veriyle verilen bir skor yanıltıcı olur.
+            </AppText>
+          </View>
+          <ProgressRing
+            progress={score.workouts / score.needed}
+            size={112}
+            stroke={10}
+            color={gradients.score}
+            trackColor="rgba(255,255,255,0.08)"
+            animated
+            delay={SCORE_DELAY}
+            testID="score-ring"
+            accessibilityLabel={`Kalibrasyon: ${score.workouts} / ${score.needed} antrenman`}
+          >
+            <AppText variant="statM" testID="calibration-count">
+              {score.workouts}/{score.needed}
+            </AppText>
+            <AppText variant="overline" color="textMuted" style={styles.ringLabel}>
+              antrenman
+            </AppText>
+          </ProgressRing>
+        </View>
+        <Pillars training={null} />
+      </Card>
+    );
+  }
+
   const tier = scoreTier(score.total);
   return (
     <Card variant="hero" accent="gold" style={styles.card}>
@@ -36,13 +86,15 @@ export function ScoreHero({ score, delta }: Props) {
           </View>
           <View style={styles.meta}>
             <Tag label={tier.label} tone={tier.tone} />
-            <View style={styles.delta}>
-              <Icon name={delta >= 0 ? 'trending-up' : 'trending-down'} size={16} color={delta >= 0 ? 'success' : 'danger'} />
-              <AppText variant="smallStrong" color={delta >= 0 ? 'success' : 'danger'}>
-                {delta >= 0 ? '+' : ''}
-                {delta} bu hafta
-              </AppText>
-            </View>
+            {score.delta !== null ? (
+              <View style={styles.delta} testID="score-delta">
+                <Icon name={score.delta >= 0 ? 'trending-up' : 'trending-down'} size={16} color={score.delta >= 0 ? 'success' : 'danger'} />
+                <AppText variant="smallStrong" color={score.delta >= 0 ? 'success' : 'danger'}>
+                  {score.delta >= 0 ? '+' : ''}
+                  {score.delta} son 7 günde
+                </AppText>
+              </View>
+            ) : null}
           </View>
         </View>
         <ProgressRing
@@ -58,28 +110,35 @@ export function ScoreHero({ score, delta }: Props) {
           <Icon name="lightning-bolt" size={30} color="gold" />
         </ProgressRing>
       </View>
-
-      <View style={styles.pillars}>
-        {PILLARS.map((p, i) => (
-          <View key={p.key} style={styles.pillar}>
-            <View style={styles.pillarHead}>
-              <AppText variant="small" color="textMuted">
-                {p.label}
-              </AppText>
-              <AnimatedNumber value={score[p.key]} delay={PILLAR_DELAY + i * PILLAR_STEP} variant="smallStrong" />
-            </View>
-            <ProgressBar
-              progress={score[p.key] / 100}
-              color={p.color}
-              height={5}
-              animated
-              delay={PILLAR_DELAY + i * PILLAR_STEP}
-              accessibilityLabel={`${p.label} ${score[p.key]} puan`}
-            />
-          </View>
-        ))}
-      </View>
+      <Pillars training={score.total} />
     </Card>
+  );
+}
+
+function Pillars({ training }: { training: number | null }) {
+  return (
+    <View style={styles.pillars}>
+      <View style={styles.pillar}>
+        <View style={styles.pillarHead}>
+          <AppText variant="small" color="textMuted">
+            Antrenman
+          </AppText>
+          {training !== null ? <AnimatedNumber value={training} delay={PILLAR_DELAY} variant="smallStrong" /> : <AppText variant="smallStrong">—</AppText>}
+        </View>
+        <ProgressBar progress={(training ?? 0) / 100} color={colors.dataTraining} height={5} animated delay={PILLAR_DELAY} accessibilityLabel={`Antrenman ${training ?? 0} puan`} />
+      </View>
+      {(['Toparlanma', 'Beslenme'] as const).map((label) => (
+        <View key={label} style={styles.pillar} accessible accessibilityLabel={`${label}: yakında, skora dahil değil`}>
+          <AppText variant="small" color="textFaint" numberOfLines={1}>
+            {label}
+          </AppText>
+          <View style={styles.soonTrack} />
+          <AppText variant="overline" color="textFaint" style={styles.soon}>
+            Yakında
+          </AppText>
+        </View>
+      ))}
+    </View>
   );
 }
 
@@ -91,6 +150,7 @@ const styles = StyleSheet.create({
   outOf: { marginLeft: spacing.xs, marginBottom: 8 },
   meta: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.md },
   delta: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  ringLabel: { fontSize: 9 },
   pillars: {
     flexDirection: 'row',
     gap: spacing.lg,
@@ -101,4 +161,6 @@ const styles = StyleSheet.create({
   },
   pillar: { flex: 1, gap: spacing.sm },
   pillarHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: spacing.xs },
+  soon: { fontSize: 9, letterSpacing: 1 },
+  soonTrack: { height: 5, borderRadius: 3, borderWidth: 1, borderStyle: 'dashed', borderColor: 'rgba(255,255,255,0.14)' },
 });
