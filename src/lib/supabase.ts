@@ -1,35 +1,26 @@
-import 'react-native-url-polyfill/auto';
-
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { AppState, Platform } from 'react-native';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { backendMode } from './backend';
-import { env } from './env';
+
+/** True when this build talks to Supabase (decided at build time, see ./backend). */
+export const hasSupabase = backendMode === 'supabase';
+
+let client: Promise<SupabaseClient> | null = null;
 
 /**
- * Supabase client, or `null` in demo mode. Callers must handle the null case.
- *
- * Only the publishable key is ever used here; data access is enforced by RLS.
- * `detectSessionInUrl` is off on every platform: email links are handled
- * explicitly by the /auth/callback screen, so web and native behave the same.
+ * The Supabase client, loaded on first use (a separate web chunk). Demo builds
+ * never call this, so they never download the SDK. A failed load (e.g. the
+ * chunk could not be fetched while offline) is not cached: the next call
+ * tries again. Callers treat the rejection like any other network error.
  */
-export const supabase: SupabaseClient | null =
-  backendMode === 'supabase'
-    ? createClient(env.supabaseUrl, env.supabaseAnonKey, {
-        auth: {
-          storage: AsyncStorage,
-          autoRefreshToken: true,
-          persistSession: true,
-          detectSessionInUrl: false,
-        },
-      })
-    : null;
-
-// Only refresh tokens while the app is in the foreground on native.
-if (supabase && Platform.OS !== 'web') {
-  AppState.addEventListener('change', (state) => {
-    if (state === 'active') supabase.auth.startAutoRefresh();
-    else supabase.auth.stopAutoRefresh();
-  });
+export function getSupabase(): Promise<SupabaseClient> {
+  if (!hasSupabase) return Promise.reject(new Error('Supabase is not configured (demo mode).'));
+  if (!client) {
+    const loading = import('./supabase-client').then((m) => m.createSupabaseClient());
+    loading.catch(() => {
+      if (client === loading) client = null;
+    });
+    client = loading;
+  }
+  return client;
 }

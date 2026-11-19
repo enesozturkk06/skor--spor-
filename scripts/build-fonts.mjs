@@ -8,9 +8,13 @@
  * 2. Icon font: only the glyphs listed in src/components/ui/icon-names.ts,
  *    taken from MaterialCommunityIcons (Pictogrammers MDI).
  *
+ * 3. Web: the same subsets as content-hashed WOFF2 files in public/fonts/, the
+ *    @font-face/preload block in public/index.html and assets/fonts/web-fonts.json.
+ *
  * Output is committed; e2e/unit/fonts.spec.ts checks it is complete and current.
  */
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { copyFileSync, mkdirSync, readFileSync, readdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 
@@ -107,3 +111,48 @@ no glyph outlines were changed.
 );
 
 console.log(`total: ${(before / 1024).toFixed(0)} KB -> ${(after / 1024).toFixed(0)} KB`);
+
+/* --------------------------- web (WOFF2) fonts --------------------------- */
+/*
+ * The web build does not wait for fonts: public/index.html declares them with
+ * @font-face (WOFF2, content-hashed names → cacheable forever) and preloads the
+ * few the first screens need; the rest load when used or when the browser is idle.
+ * The icon font uses font-display: block so icons never flash as boxes.
+ */
+const WEB_OUT = 'public/fonts';
+const WEB_PRELOAD = new Set(['BarlowCondensed_800ExtraBold_Italic', 'Inter_400Regular', 'Inter_600SemiBold', 'skor-icons']);
+mkdirSync(WEB_OUT, { recursive: true });
+for (const f of readdirSync(WEB_OUT)) if (f.endsWith('.woff2')) unlinkSync(join(WEB_OUT, f));
+
+const webFonts = {};
+const writeWoff2 = (family, data) => {
+  const file = `${family}.${createHash('sha256').update(data).digest('hex').slice(0, 10)}.woff2`;
+  writeFileSync(join(WEB_OUT, file), data);
+  webFonts[family] = `/fonts/${file}`;
+  console.log(`  web ${file}: ${(data.length / 1024).toFixed(1)} KB`);
+};
+for (const [name, pkg, weight] of TEXT_FONTS) {
+  const pkgDir = dirname(require.resolve(`${pkg}/package.json`));
+  writeWoff2(name, await subsetFont(readFileSync(join(pkgDir, weight, `${name}.ttf`)), textChars, { targetFormat: 'woff2' }));
+}
+writeWoff2('skor-icons', await subsetFont(iconSrc, Object.values(glyphMap).map((cp) => String.fromCodePoint(cp)).join(''), { targetFormat: 'woff2' }));
+
+writeFileSync(join(OUT, 'web-fonts.json'), `${JSON.stringify(webFonts, null, 2)}\n`);
+
+const families = Object.keys(webFonts);
+const block = [
+  '<!-- skor-fonts:start -->',
+  ...families.filter((f) => WEB_PRELOAD.has(f)).map((f) => `    <link rel="preload" href="${webFonts[f]}" as="font" type="font/woff2" crossorigin />`),
+  '    <style id="skor-fonts">',
+  ...families.map(
+    (f) => `      @font-face { font-family: ${f}; src: url(${webFonts[f]}) format('woff2'); font-display: ${f === 'skor-icons' ? 'block' : 'swap'}; }`,
+  ),
+  '    </style>',
+  '    <!-- skor-fonts:end -->',
+].join('\n');
+const TEMPLATE = 'public/index.html';
+const html = readFileSync(TEMPLATE, 'utf8');
+const marked = /<!-- skor-fonts:start -->[\s\S]*?<!-- skor-fonts:end -->/;
+if (!marked.test(html)) throw new Error(`${TEMPLATE}: skor-fonts markers not found`);
+writeFileSync(TEMPLATE, html.replace(marked, block));
+console.log(`web fonts: ${families.length} files, ${WEB_PRELOAD.size} preloaded → ${TEMPLATE}`);

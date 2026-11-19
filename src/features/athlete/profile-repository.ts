@@ -2,7 +2,7 @@ import type { PostgrestError } from '@supabase/supabase-js';
 
 import { backendMode, storageKeys } from '@/lib/backend';
 import { storage } from '@/lib/storage';
-import { supabase } from '@/lib/supabase';
+import { getSupabase, hasSupabase } from '@/lib/supabase';
 
 import { LIMITS, isGoalId, isSportId } from './catalog';
 import type { AthleteProfile } from './types';
@@ -119,10 +119,10 @@ export const profileRepository = {
       await storage.remove(LEGACY_CACHE_KEY(userId));
     }
 
-    if (backendMode === 'demo' || !supabase) return { status: 'ok', profile: cached };
+    if (backendMode === 'demo' || !hasSupabase) return { status: 'ok', profile: cached };
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (await getSupabase())
         .from('athlete_profiles')
         .select(PROFILE_COLUMNS)
         .eq('user_id', userId)
@@ -151,7 +151,7 @@ export const profileRepository = {
     if (!clean) throw new ProfileSaveError('Geçersiz profil verisi.');
     const cacheKey = storageKeys.profileCache(clean.userId);
 
-    if (backendMode === 'demo' || !supabase) {
+    if (backendMode === 'demo' || !hasSupabase) {
       await storage.set(cacheKey, clean);
       return clean;
     }
@@ -159,7 +159,7 @@ export const profileRepository = {
     let data: AthleteProfileRow | null = null;
     let error: PostgrestError | null = null;
     try {
-      ({ data, error } = await supabase
+      ({ data, error } = await (await getSupabase())
         .from('athlete_profiles')
         .upsert(toWrite(clean), { onConflict: 'user_id' })
         .select(PROFILE_COLUMNS)

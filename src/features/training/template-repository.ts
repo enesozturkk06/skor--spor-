@@ -1,7 +1,7 @@
 import { backendMode, storageKeys } from '@/lib/backend';
 import { env } from '@/lib/env';
 import { storage } from '@/lib/storage';
-import { supabase } from '@/lib/supabase';
+import { getSupabase, hasSupabase } from '@/lib/supabase';
 
 import { SESSION_REJECTED, classify } from './sync-errors';
 import { fromTemplateRow, sanitizeTemplate, toTemplateRow, validateTemplate, type TemplateRow } from './template-model';
@@ -14,7 +14,7 @@ import type { WorkoutTemplate } from './types';
  * duplicate. Remote calls only with EXPO_PUBLIC_TRAINING_SYNC=1 (the table is
  * not live yet — Phase 3F). Built-in programs are app data and never stored.
  */
-const remote = backendMode === 'supabase' && env.trainingSync && supabase !== null;
+const remote = backendMode === 'supabase' && env.trainingSync && hasSupabase;
 
 type Store = {
   items: WorkoutTemplate[];
@@ -61,7 +61,12 @@ async function flushLocked(userId: string): Promise<TemplateFlush> {
   if (!remote) return 'disabled';
   const s = await read(userId);
   if (!s.dirty.length && !s.deleted.length) return 'idle';
-  const client = supabase!;
+  let client: Awaited<ReturnType<typeof getSupabase>>;
+  try {
+    client = await getSupabase();
+  } catch {
+    return 'offline';
+  }
   try {
     for (const id of [...s.deleted]) {
       const { error } = await client.from('workout_templates').delete().eq('id', id).eq('user_id', userId);
@@ -104,7 +109,7 @@ export const templateRepository = {
     return withLock(userId, async () => {
       const s = await read(userId);
       try {
-        const { data, error } = await supabase!.from('workout_templates').select(COLUMNS).eq('user_id', userId).order('updated_at', { ascending: false }).returns<TemplateRow[]>();
+        const { data, error } = await (await getSupabase()).from('workout_templates').select(COLUMNS).eq('user_id', userId).order('updated_at', { ascending: false }).returns<TemplateRow[]>();
         if (error) throw error;
         const fromServer = (data ?? []).map((r) => fromTemplateRow(r, userId)).filter((t): t is WorkoutTemplate => t !== null);
         // Server is authoritative except for local changes it has not received yet.

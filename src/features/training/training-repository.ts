@@ -1,7 +1,7 @@
 import { backendMode, storageKeys } from '@/lib/backend';
 import { env } from '@/lib/env';
 import { storage } from '@/lib/storage';
-import { supabase } from '@/lib/supabase';
+import { getSupabase, hasSupabase } from '@/lib/supabase';
 
 import { cursorFilter, mergeById, newestFirst, pageOf, type HistoryCursor } from './pagination';
 import { SESSION_REJECTED, classify, isPostgrestError } from './sync-errors';
@@ -23,7 +23,7 @@ import { sanitizeWorkout, toSavePayload } from './workout-model';
  * Remote calls happen only when EXPO_PUBLIC_TRAINING_SYNC=1 (the tables are
  * not live yet); until then Supabase-mode workouts wait in the outbox.
  */
-export const remoteTrainingEnabled = backendMode === 'supabase' && env.trainingSync && supabase !== null;
+export const remoteTrainingEnabled = backendMode === 'supabase' && env.trainingSync && hasSupabase;
 
 export type HistoryResult =
   | {
@@ -208,7 +208,8 @@ const fromRow = (r: WorkoutRow) => ({
  * make a row fall between pages.
  */
 async function fetchPage(userId: string, cursor: HistoryCursor | null, limit: number): Promise<{ items: Workout[]; next: HistoryCursor | null }> {
-  let q = supabase!.from('workouts').select(SELECT).eq('user_id', userId);
+  const client = await getSupabase();
+  let q = client.from('workouts').select(SELECT).eq('user_id', userId);
   if (cursor) q = q.or(cursorFilter(cursor));
   const { data, error } = await q.order('started_at', { ascending: false }).order('id', { ascending: false }).limit(limit).returns<WorkoutRow[]>();
   if (error) throw error;
@@ -221,7 +222,7 @@ async function fetchPage(userId: string, cursor: HistoryCursor | null, limit: nu
 }
 
 async function sendRemote(w: Workout): Promise<void> {
-  const { error } = await supabase!.rpc('save_workout', { p: toSavePayload(w) });
+  const { error } = await (await getSupabase()).rpc('save_workout', { p: toSavePayload(w) });
   if (error) throw error;
 }
 
@@ -257,7 +258,7 @@ async function flushLocked(userId: string): Promise<FlushResult> {
     }
     try {
       // RLS + explicit owner filter: only the caller's own row can ever match.
-      const { error } = await supabase!.from('workouts').delete().eq('id', id).eq('user_id', userId);
+      const { error } = await (await getSupabase()).from('workouts').delete().eq('id', id).eq('user_id', userId);
       if (error) throw error;
     } catch (error) {
       leftDeletes.push(id);

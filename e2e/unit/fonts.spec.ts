@@ -3,7 +3,8 @@
  * complete and current: every registered icon present, every Turkish letter
  * present, nothing stale. Pure file checks with a tiny TTF cmap reader.
  */
-import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { expect, test } from '@playwright/test';
@@ -91,6 +92,25 @@ test.describe('Font varlıkları', () => {
       expect(readFileSync(join(FONTS, `${name}.ttf`)).length, name).toBeLessThan(110 * 1024);
     }
     expect(readFileSync(join(FONTS, 'skor-icons.ttf')).length).toBeLessThan(40 * 1024);
+  });
+
+  test('web fontları (WOFF2) eksiksiz, adları içerikle eşleşiyor ve HTML şablonu güncel', () => {
+    const PUBLIC = join(ROOT, 'public');
+    const map = JSON.parse(readFileSync(join(FONTS, 'web-fonts.json'), 'utf8')) as Record<string, string>;
+    expect(Object.keys(map).sort(), 'run `npm run fonts:build`').toEqual([...TEXT_FONTS, 'skor-icons'].sort());
+    for (const [family, url] of Object.entries(map)) {
+      const data = readFileSync(join(PUBLIC, url));
+      expect(data.subarray(0, 4).toString('latin1'), `${url} is WOFF2`).toBe('wOF2');
+      // Content-hashed name → safe to cache forever (public/_headers).
+      expect(url).toBe(`/fonts/${family}.${createHash('sha256').update(data).digest('hex').slice(0, 10)}.woff2`);
+      expect(data.length, url).toBeLessThan(family === 'skor-icons' ? 20 * 1024 : 45 * 1024);
+    }
+    // No stale files from an older build are left to be published.
+    expect(readdirSync(join(PUBLIC, 'fonts')).map((f) => `/fonts/${f}`).sort()).toEqual(Object.values(map).sort());
+    const html = readFileSync(join(PUBLIC, 'index.html'), 'utf8');
+    for (const [family, url] of Object.entries(map)) {
+      expect(html, family).toContain(`@font-face { font-family: ${family}; src: url(${url}) format('woff2'); font-display: ${family === 'skor-icons' ? 'block' : 'swap'}; }`);
+    }
   });
 
   test('lisans dosyaları fontlarla birlikte', () => {
