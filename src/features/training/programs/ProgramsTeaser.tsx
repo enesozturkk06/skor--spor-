@@ -27,7 +27,7 @@ export function ProgramsTeaser() {
       <View style={styles.inner} testID="programs-teaser">
         <View style={styles.head}>
           <View style={styles.icon}>
-            <Icon name="calendar-week" size={22} color="gold" />
+            <Icon name="calendar-week-outline" size={22} color="gold" />
           </View>
           <View style={styles.flex}>
             <AppText variant="overline" color="gold">

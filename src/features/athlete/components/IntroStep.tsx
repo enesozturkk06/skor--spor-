@@ -7,7 +7,7 @@ import { colors, radius, spacing } from '@/theme';
 
 const STEPS: { icon: IconName; label: string }[] = [
   { icon: 'dumbbell', label: 'Ana branşın' },
-  { icon: 'lightning-bolt', label: 'Ek branşların' },
+  { icon: 'plus', label: 'Ek branşların' },
   { icon: 'target', label: 'Hedeflerin' },
   { icon: 'ruler', label: 'Fiziksel bilgilerin' },
 ];

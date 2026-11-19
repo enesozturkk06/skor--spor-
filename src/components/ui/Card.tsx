@@ -4,11 +4,19 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { PressableScale } from '@/components/motion/PressableScale';
 import { pressScale } from '@/theme/motion';
-import { colors, gradients, radius, spacing } from '@/theme';
+import { colors, elevation, glows, gradients, radius, spacing, surfaces, type GlowTone } from '@/theme';
 
 type CardProps = {
   children: ReactNode;
-  variant?: 'surface' | 'hero' | 'outline';
+  /**
+   * Surface level (see `surfaces` in theme/tokens.ts):
+   * - surface: base content · raised: stands out from the base layer
+   * - featured: the one focal card of a screen (gradient, shadow, optional glow)
+   * - hero: petrol gradient without depth (existing cards) · outline: transparent
+   */
+  variant?: 'surface' | 'raised' | 'featured' | 'hero' | 'outline';
+  /** Controlled light on the card (featured cards only; ignored elsewhere). */
+  glow?: GlowTone;
   /** Short colored line on the top edge — the SKOR "score line" motif. */
   accent?: 'orange' | 'gold' | 'none';
   padded?: boolean;
@@ -20,21 +28,26 @@ type CardProps = {
 export function Card({
   children,
   variant = 'surface',
+  glow,
   accent = 'none',
   padded = true,
   onPress,
   accessibilityLabel,
   style,
 }: CardProps) {
+  const gradient = variant === 'hero' || variant === 'featured';
   const body = (
     <>
-      {variant === 'hero' ? (
+      {gradient ? (
         <LinearGradient
           colors={gradients.hero}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
+      ) : null}
+      {variant === 'featured' && glow ? (
+        <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundImage: glows[glow] }]} />
       ) : null}
       {accent !== 'none' ? (
         <View style={[styles.accent, { backgroundColor: accent === 'orange' ? colors.orange : colors.gold }]} />
@@ -43,7 +56,8 @@ export function Card({
     </>
   );
 
-  const baseStyle = [styles.base, variant === 'outline' ? styles.outline : styles.surface, style];
+  const level = variant === 'raised' ? styles.raised : variant === 'featured' ? styles.featured : variant === 'outline' ? styles.outline : styles.surface;
+  const baseStyle = [styles.base, level, style];
 
   if (onPress) {
     return (
@@ -64,7 +78,9 @@ export function Card({
 
 const styles = StyleSheet.create({
   base: { borderRadius: radius.lg, overflow: 'hidden', borderWidth: 1, borderColor: colors.border },
-  surface: { backgroundColor: colors.surface },
+  surface: surfaces.base,
+  raised: { ...surfaces.raised, boxShadow: elevation.raised },
+  featured: { ...surfaces.featured, boxShadow: elevation.featured },
   outline: { backgroundColor: colors.transparent, borderColor: colors.borderStrong },
   content: { flexGrow: 1 },
   padded: { padding: spacing.lg },

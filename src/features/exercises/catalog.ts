@@ -34,7 +34,7 @@ export const MODALITY_META: Record<Modality, { label: string; icon: IconName }> 
   time: { label: 'Süre', icon: 'timer-outline' },
   cardio: { label: 'Mesafe & süre', icon: 'map-marker-distance' },
   rounds: { label: 'Raund', icon: 'boxing-glove' },
-  skill: { label: 'Teknik', icon: 'target' },
+  skill: { label: 'Teknik', icon: 'whistle-outline' },
 };
 
 export const LEVEL_LABELS: Record<Level, string> = {

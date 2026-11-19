@@ -3,28 +3,28 @@ import type { IconName } from '@/components/ui';
 export type SportCategory = 'strength' | 'combat' | 'team' | 'endurance' | 'racket';
 
 export const SPORTS = [
-  { id: 'fitness', label: 'Fitness', icon: 'dumbbell', category: 'strength' },
-  { id: 'bodybuilding', label: 'Bodybuilding', icon: 'weight-lifter', category: 'strength' },
-  { id: 'boxing', label: 'Boks', icon: 'boxing-glove', category: 'combat' },
-  { id: 'kickboxing', label: 'Kickboks', icon: 'mixed-martial-arts', category: 'combat' },
-  { id: 'karate', label: 'Karate', icon: 'karate', category: 'combat' },
-  { id: 'football', label: 'Futbol', icon: 'soccer', category: 'team' },
-  { id: 'basketball', label: 'Basketbol', icon: 'basketball', category: 'team' },
-  { id: 'volleyball', label: 'Voleybol', icon: 'volleyball', category: 'team' },
-  { id: 'running', label: 'Koşu', icon: 'run', category: 'endurance' },
-  { id: 'swimming', label: 'Yüzme', icon: 'swim', category: 'endurance' },
-  { id: 'tennis', label: 'Tenis', icon: 'tennis', category: 'racket' },
+  { id: 'fitness', label: 'Fitness', icon: 'sport-fitness', category: 'strength' },
+  { id: 'bodybuilding', label: 'Bodybuilding', icon: 'sport-bodybuilding', category: 'strength' },
+  { id: 'boxing', label: 'Boks', icon: 'sport-boxing', category: 'combat' },
+  { id: 'kickboxing', label: 'Kickboks', icon: 'sport-kickboxing', category: 'combat' },
+  { id: 'karate', label: 'Karate', icon: 'sport-karate', category: 'combat' },
+  { id: 'football', label: 'Futbol', icon: 'sport-football', category: 'team' },
+  { id: 'basketball', label: 'Basketbol', icon: 'sport-basketball', category: 'team' },
+  { id: 'volleyball', label: 'Voleybol', icon: 'sport-volleyball', category: 'team' },
+  { id: 'running', label: 'Koşu', icon: 'sport-running', category: 'endurance' },
+  { id: 'swimming', label: 'Yüzme', icon: 'sport-swimming', category: 'endurance' },
+  { id: 'tennis', label: 'Tenis', icon: 'sport-tennis', category: 'racket' },
 ] as const satisfies readonly { id: string; label: string; icon: IconName; category: SportCategory }[];
 
 export type SportId = (typeof SPORTS)[number]['id'];
 
 export const GOALS = [
-  { id: 'muscle_gain', label: 'Kas kazanımı', icon: 'arm-flex' },
-  { id: 'fat_loss', label: 'Yağ yakımı', icon: 'fire' },
+  { id: 'muscle_gain', label: 'Kas kazanımı', icon: 'arm-flex-outline' },
+  { id: 'fat_loss', label: 'Yağ yakımı', icon: 'tape-measure' },
   { id: 'strength', label: 'Güç artışı', icon: 'weight-lifter' },
-  { id: 'endurance', label: 'Dayanıklılık', icon: 'heart-pulse' },
-  { id: 'performance', label: 'Branş performansı', icon: 'lightning-bolt' },
-  { id: 'competition', label: 'Müsabaka hazırlığı', icon: 'trophy-outline' },
+  { id: 'endurance', label: 'Dayanıklılık', icon: 'battery-charging-high' },
+  { id: 'performance', label: 'Branş performansı', icon: 'rocket-launch-outline' },
+  { id: 'competition', label: 'Müsabaka hazırlığı', icon: 'flag-checkered' },
   { id: 'mobility', label: 'Mobilite & esneklik', icon: 'yoga' },
   { id: 'wellness', label: 'Sağlıklı yaşam', icon: 'meditation' },
 ] as const satisfies readonly { id: string; label: string; icon: IconName }[];

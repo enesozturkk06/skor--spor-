@@ -6,17 +6,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PressableScale } from '@/components/motion/PressableScale';
 import { pressScale } from '@/theme/motion';
 import { AppText, Icon, type IconName } from '@/components/ui';
+import { APP_ICONS } from '@/components/ui/icon-system';
 import { colors, gradients, layout, radius, spacing } from '@/theme';
 
 export type TabMeta = { label: string; icon: IconName; iconActive: IconName; featured?: boolean };
 
 /** Visual metadata per route name. Order is defined by the Tabs layout. */
 export const TAB_META: Record<string, TabMeta> = {
-  index: { label: 'Ana Sayfa', icon: 'home-variant-outline', iconActive: 'home-variant' },
-  training: { label: 'Antrenman', icon: 'lightning-bolt-outline', iconActive: 'lightning-bolt' },
-  coach: { label: 'AI Koç', icon: 'brain', iconActive: 'brain', featured: true },
-  nutrition: { label: 'Beslenme', icon: 'food-apple-outline', iconActive: 'food-apple' },
-  profile: { label: 'Profil', icon: 'account-circle-outline', iconActive: 'account-circle' },
+  index: { label: 'Ana Sayfa', icon: APP_ICONS.home.outline, iconActive: APP_ICONS.home.filled },
+  training: { label: 'Antrenman', icon: APP_ICONS.training.outline, iconActive: APP_ICONS.training.filled },
+  coach: { label: 'AI Koç', icon: APP_ICONS.coach.outline, iconActive: APP_ICONS.coach.outline, featured: true },
+  nutrition: { label: 'Beslenme', icon: APP_ICONS.nutrition.outline, iconActive: APP_ICONS.nutrition.filled },
+  profile: { label: 'Profil', icon: APP_ICONS.profile.outline, iconActive: APP_ICONS.profile.filled },
 };
 
 /** Space content must leave at the bottom so the floating bar never covers it. */

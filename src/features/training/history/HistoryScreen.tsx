@@ -125,7 +125,7 @@ export function HistoryScreen() {
 
       {!all.length ? (
         <View style={styles.empty} testID="history-empty">
-          <Icon name="calendar-check" size={32} color="textFaint" />
+          <Icon name="calendar-check-outline" size={32} color="textFaint" />
           <AppText variant="h3">Henüz antrenman yok</AppText>
           <AppText variant="small" color="textMuted" align="center">
             İlk antrenmanını bitirdiğinde burada görünecek; rekorların ve skorun buradan beslenir.

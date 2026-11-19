@@ -1,9 +1,9 @@
-import { useFonts } from 'expo-font';
+import { FontDisplay, useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ReduceMotion, ReducedMotionConfig } from 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -14,26 +14,40 @@ import { ProfileLoadError } from '@/features/athlete/components/ProfileLoadError
 import { AuthProvider, useAuth } from '@/features/auth/AuthProvider';
 import { DashboardSkeleton } from '@/features/dashboard/components/DashboardSkeleton';
 import { TrainingProvider } from '@/features/training/TrainingProvider';
+import { hideStartupShell } from '@/lib/startup-shell';
 import { colors } from '@/theme';
+
+import webFonts from '../../assets/fonts/web-fonts.json';
 
 SplashScreen.preventAutoHideAsync().catch(() => {
   /* already hidden (e.g. fast refresh) */
 });
 
+/**
+ * Fonts built by `npm run fonts:build` (family names unchanged).
+ * - Native: bundled subset TTFs, all awaited behind the native splash.
+ * - Web: text fonts are declared in public/index.html (@font-face, WOFF2, the
+ *   first screen's weights preloaded) and never block rendering. Only the tiny
+ *   icon font is awaited — same preloaded file — so icons never pop in; the
+ *   HTML start screen covers that short wait.
+ */
+const FONTS =
+  Platform.OS === 'web'
+    ? { 'skor-icons': { uri: webFonts['skor-icons'], display: FontDisplay.BLOCK } }
+    : {
+        BarlowCondensed_600SemiBold: require('../../assets/fonts/BarlowCondensed_600SemiBold.ttf'),
+        BarlowCondensed_700Bold: require('../../assets/fonts/BarlowCondensed_700Bold.ttf'),
+        BarlowCondensed_800ExtraBold: require('../../assets/fonts/BarlowCondensed_800ExtraBold.ttf'),
+        BarlowCondensed_800ExtraBold_Italic: require('../../assets/fonts/BarlowCondensed_800ExtraBold_Italic.ttf'),
+        Inter_400Regular: require('../../assets/fonts/Inter_400Regular.ttf'),
+        Inter_500Medium: require('../../assets/fonts/Inter_500Medium.ttf'),
+        Inter_600SemiBold: require('../../assets/fonts/Inter_600SemiBold.ttf'),
+        Inter_700Bold: require('../../assets/fonts/Inter_700Bold.ttf'),
+        ...IconFont.font,
+      };
+
 export default function RootLayout() {
-  // Subset fonts built by `npm run fonts:build` (family names unchanged), plus the
-  // icon font so icons never pop in after text.
-  const [fontsLoaded, fontError] = useFonts({
-    BarlowCondensed_600SemiBold: require('../../assets/fonts/BarlowCondensed_600SemiBold.ttf'),
-    BarlowCondensed_700Bold: require('../../assets/fonts/BarlowCondensed_700Bold.ttf'),
-    BarlowCondensed_800ExtraBold: require('../../assets/fonts/BarlowCondensed_800ExtraBold.ttf'),
-    BarlowCondensed_800ExtraBold_Italic: require('../../assets/fonts/BarlowCondensed_800ExtraBold_Italic.ttf'),
-    Inter_400Regular: require('../../assets/fonts/Inter_400Regular.ttf'),
-    Inter_500Medium: require('../../assets/fonts/Inter_500Medium.ttf'),
-    Inter_600SemiBold: require('../../assets/fonts/Inter_600SemiBold.ttf'),
-    Inter_700Bold: require('../../assets/fonts/Inter_700Bold.ttf'),
-    ...IconFont.font,
-  });
+  const [fontsLoaded, fontError] = useFonts(FONTS);
 
   if (fontError) console.warn('[fonts] failed to load, falling back to system fonts', fontError);
   if (!fontsLoaded && !fontError) return null;
@@ -64,7 +78,10 @@ function RootNavigator() {
   // The native splash only covers session restore; the profile request that
   // follows shows a dashboard skeleton (faster perceived start on slow networks).
   useEffect(() => {
-    if (!initializing) SplashScreen.hideAsync().catch(() => {});
+    if (initializing) return;
+    SplashScreen.hideAsync().catch(() => {});
+    // Web: the HTML start screen gives way to the first real screen (or skeleton).
+    hideStartupShell();
   }, [initializing]);
 
   if (!ready) return initializing ? null : <DashboardSkeleton />;
@@ -89,6 +106,8 @@ function RootNavigator() {
       <Stack.Screen name="auth/callback" />
       {/* Dev/E2E-only preview of motion primitives; redirects in production. */}
       <Stack.Screen name="motion-lab" />
+      {/* Dev/E2E-only gallery of the design system; redirects in production. */}
+      <Stack.Screen name="design-lab" />
 
       <Stack.Protected guard={signedIn && !onboarded} redirectTo={signedIn ? '/' : '/welcome'}>
         <Stack.Screen name="onboarding" />

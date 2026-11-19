@@ -13,7 +13,7 @@ export function MotivationCard({ message }: { message: string }) {
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-      <Icon name="format-quote-open" size={28} color="orange" />
+      <Icon name="format-quote-open-outline" size={28} color="orange" />
       <AppText variant="h2" style={styles.message}>
         {message}
       </AppText>

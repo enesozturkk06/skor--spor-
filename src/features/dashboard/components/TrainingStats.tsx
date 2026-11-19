@@ -18,7 +18,7 @@ const duration = (minutes: number) => {
 /** This week's logged training. Values count up one tile after another; "—" when there is nothing to show. */
 export function TrainingStats({ stats }: { stats: DashboardSnapshot['stats'] }) {
   const items: Stat[] = [
-    { icon: 'calendar-check', label: 'Antrenman', value: stats.sessions, format: (n) => String(n), unit: 'seans', testID: 'stat-sessions' },
+    { icon: 'calendar-check-outline', label: 'Antrenman', value: stats.sessions, format: (n) => String(n), unit: 'seans', testID: 'stat-sessions' },
     { icon: 'timer-outline', label: 'Toplam süre', value: stats.minutes, format: duration, unit: 'dk', testID: 'stat-minutes' },
     { icon: 'check', label: 'Tamamlanan set', value: stats.sets, format: (n) => String(n), unit: 'set', testID: 'stat-sets' },
     { icon: 'speedometer', label: 'Ort. zorluk', value: stats.avgRpe, decimals: 1, format: (n) => tr(n, 1), unit: 'RPE', testID: 'stat-rpe' },

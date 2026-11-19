@@ -107,7 +107,7 @@ export function ScoreHero({ score }: { score: TrainingScore }) {
           delay={SCORE_DELAY}
           testID="score-ring"
         >
-          <Icon name="lightning-bolt" size={30} color="gold" />
+          <Icon name="lightning-bolt-outline" size={30} color="gold" />
         </ProgressRing>
       </View>
       <Pillars training={score.total} />

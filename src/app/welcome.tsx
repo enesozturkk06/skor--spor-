@@ -5,6 +5,7 @@ import Animated from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 
 import { AnimatedLogo, AppText, Button, Icon, Screen, type IconName } from '@/components/ui';
+import { APP_ICONS } from '@/components/ui/icon-system';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { SessionExpiredNotice } from '@/features/auth/components/SessionExpiredNotice';
 import { colors, radius, spacing } from '@/theme';
@@ -12,10 +13,10 @@ import { enter } from '@/components/motion/entrance';
 import { useSvgId } from '@/components/ui/useSvgId';
 
 const PILLARS: { icon: IconName; label: string }[] = [
-  { icon: 'lightning-bolt', label: 'Antrenman' },
-  { icon: 'food-apple', label: 'Beslenme' },
-  { icon: 'heart-pulse', label: 'Recovery' },
-  { icon: 'brain', label: 'AI Koç' },
+  { icon: APP_ICONS.training.outline, label: 'Antrenman' },
+  { icon: APP_ICONS.nutrition.outline, label: 'Beslenme' },
+  { icon: APP_ICONS.recovery.outline, label: 'Recovery' },
+  { icon: APP_ICONS.coach.outline, label: 'AI Koç' },
 ];
 
 
