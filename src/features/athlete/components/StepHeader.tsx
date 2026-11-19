@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
 import { AppText, Icon } from '@/components/ui';
-import { colors, radius, spacing } from '@/theme';
+import { colors, layout, radius, spacing } from '@/theme';
 import { timing } from '@/theme/motion';
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -104,7 +104,7 @@ export function StepTitle({ title, subtitle }: { title: string; subtitle: string
 const styles = StyleSheet.create({
   wrap: { gap: spacing.md, marginBottom: spacing.lg },
   nav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  navBtn: { width: 40, height: 40, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
+  navBtn: { width: layout.minTouch, height: layout.minTouch, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
   segments: { flexDirection: 'row', gap: spacing.xs },
   segment: { flex: 1, height: 4, borderRadius: 2, backgroundColor: colors.dataTrack, overflow: 'hidden' },
   segmentFill: { height: '100%', borderRadius: 2, backgroundColor: colors.orange },

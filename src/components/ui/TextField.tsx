@@ -1,7 +1,7 @@
 import { useState, type Ref } from 'react';
 import { Pressable, StyleSheet, TextInput, View, type TextInputInstance, type TextInputProps } from 'react-native';
 
-import { colors, fonts, radius, spacing } from '@/theme';
+import { colors, fonts, layout, radius, spacing } from '@/theme';
 
 import { AppText } from './AppText';
 import { Icon, type IconName } from './Icon';
@@ -64,8 +64,8 @@ export function TextField({
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={hidden ? 'Şifreyi göster' : 'Şifreyi gizle'}
-            hitSlop={12}
             onPress={() => setHidden((v) => !v)}
+            style={styles.toggle}
           >
             <Icon name={hidden ? 'eye-outline' : 'eye-off-outline'} size={20} color="textMuted" />
           </Pressable>
@@ -95,6 +95,8 @@ const styles = StyleSheet.create({
   },
   focused: { borderColor: colors.gold, backgroundColor: colors.surfaceAlt },
   errored: { borderColor: colors.danger },
+  // 44×44 touch target; the negative margin keeps the 20 px icon where it was.
+  toggle: { width: layout.minTouch, height: layout.minTouch, marginRight: -12, alignItems: 'center', justifyContent: 'center' },
   input: {
     flex: 1,
     minWidth: 0,

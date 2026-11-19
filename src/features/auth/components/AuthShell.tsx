@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText, Icon, Logo, Screen } from '@/components/ui';
-import { colors, radius, spacing } from '@/theme';
+import { colors, layout, radius, spacing } from '@/theme';
 
 import { useAuth } from '../AuthProvider';
 
@@ -63,7 +63,7 @@ export function AuthShell({ title, subtitle, children, footer }: AuthShellProps)
 
 const styles = StyleSheet.create({
   nav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.xxxl },
-  back: { width: 40, height: 40, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
+  back: { width: layout.minTouch, height: layout.minTouch, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
   head: { gap: spacing.sm, marginBottom: spacing.xxl },
   demo: {
     flexDirection: 'row',

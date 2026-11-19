@@ -28,9 +28,24 @@ test.describe('Ana sayfa dashboard', () => {
     await app.expectDashboard();
   });
 
+  test('çalışan modüller "Yakında" ya da "Geliştiriliyor" olarak gösterilmez (K1)', async ({ app, page }) => {
+    // Quick access: live modules carry no "coming soon" tag; modules in development still do.
+    const tile = (name: RegExp) => page.getByRole('button', { name });
+    await expect(tile(/^Antrenman,/)).toBeVisible();
+    await expect(tile(/^Antrenman,/).getByText(/^(Yakında|YAKINDA)$/)).toHaveCount(0);
+    await expect(tile(/^Egzersiz Kütüphanesi,/).getByText(/^(Yakında|YAKINDA)$/)).toHaveCount(0);
+    await expect(tile(/^Recovery,/).getByText(/^(Yakında|YAKINDA)$/)).toHaveCount(1);
+
+    // Training tab: the working screens only — no roadmap card for features that already exist.
+    await app.tab('Antrenman').click();
+    await expect(app.text('Antrenmana başla')).toBeVisible();
+    await expect(app.text('Bu modülde neler olacak').filter({ visible: true })).toHaveCount(0);
+    await expect(app.text('Geliştiriliyor').filter({ visible: true })).toHaveCount(0);
+  });
+
   test('alt menüdeki tüm sekmeler açılır', async ({ app }) => {
     const tabs: [string, string][] = [
-      ['Antrenman', 'Plan, kayıt ve ilerleme'],
+      ['Antrenman', 'Antrenmana başla'],
       ['AI Koç', 'Kişisel performans asistanı'],
       ['Beslenme', 'Kalori ve makro takibi'],
       ['Profil', 'Profili düzenle'],

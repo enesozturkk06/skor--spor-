@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { spacing } from '@/theme';
+import { layout, spacing } from '@/theme';
 
 import { AppText } from './AppText';
 import { Icon } from './Icon';
@@ -26,7 +26,7 @@ export function SectionHeader({ title, overline, actionLabel, onAction }: Sectio
         </AppText>
       </View>
       {actionLabel && onAction ? (
-        <Pressable accessibilityRole="button" onPress={onAction} hitSlop={10} style={styles.action}>
+        <Pressable accessibilityRole="button" accessibilityLabel={actionLabel} onPress={onAction} style={styles.action}>
           <AppText variant="smallStrong" color="orange">
             {actionLabel}
           </AppText>
@@ -40,5 +40,6 @@ export function SectionHeader({ title, overline, actionLabel, onAction }: Sectio
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: spacing.md },
   titles: { gap: spacing.xxs, flexShrink: 1 },
-  action: { flexDirection: 'row', alignItems: 'center' },
+  // 44 px touch target; negative margins keep the link visually where it was.
+  action: { flexDirection: 'row', alignItems: 'center', minHeight: layout.minTouch, paddingLeft: spacing.sm, marginVertical: -13, marginRight: -spacing.xs },
 });

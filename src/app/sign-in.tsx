@@ -2,9 +2,10 @@ import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import type { TextInputInstance } from 'react-native';
 
-import { AppText, Button, TextField } from '@/components/ui';
+import { Button, TextField } from '@/components/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { AuthShell } from '@/features/auth/components/AuthShell';
+import { AuthSwitch } from '@/features/auth/components/AuthSwitch';
 import { FormError } from '@/features/auth/components/FormError';
 import { SessionExpiredNotice } from '@/features/auth/components/SessionExpiredNotice';
 import { validate } from '@/lib/validation';
@@ -43,14 +44,7 @@ export default function SignInScreen() {
     <AuthShell
       title="Tekrar hoş geldin"
       subtitle="Performansını kaldığın yerden takip et."
-      footer={
-        <AppText variant="small" color="textMuted">
-          Hesabın yok mu?{' '}
-          <AppText variant="smallStrong" color="orange" accessibilityRole="link" onPress={() => router.replace('/sign-up')}>
-            Kayıt ol
-          </AppText>
-        </AppText>
-      }
+      footer={<AuthSwitch prompt="Hesabın yok mu?" action="Kayıt ol" onPress={() => router.replace('/sign-up')} />}
     >
       <SessionExpiredNotice />
       <FormError message={formError} />

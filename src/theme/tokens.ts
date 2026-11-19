@@ -101,6 +101,8 @@ export const layout = {
   /** Breakpoint where dashboards switch to two columns. */
   wideBreakpoint: 900,
   tabBarHeight: 64,
+  /** Minimum touch target (Apple HIG 44 pt; WCAG 2.5.8 asks ≥ 24). */
+  minTouch: 44,
 } as const;
 
 export const gradients = {
@@ -111,3 +113,73 @@ export const gradients = {
 };
 
 export type ColorToken = keyof typeof colors;
+
+/* ------------------------------------------------------------------ */
+/* Depth: surfaces, elevation, light                                   */
+/* ------------------------------------------------------------------ */
+
+const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(',');
+
+/**
+ * Surface hierarchy — pick by importance, never for decoration:
+ * - base:     most content (lists, secondary cards)
+ * - raised:   a group that must stand out from the base layer
+ * - featured: the ONE focal card of a screen (score, today's workout). The
+ *             only level with a glow and a deep shadow.
+ */
+export const surfaces = {
+  base: { backgroundColor: colors.surface, borderColor: colors.border },
+  raised: { backgroundColor: colors.surfaceAlt, borderColor: 'rgba(214,183,122,0.16)' },
+  featured: { backgroundColor: colors.petrolDeep, borderColor: colors.borderStrong },
+} as const;
+
+export type SurfaceLevel = keyof typeof surfaces;
+
+/** Shadows (React Native 0.88 `boxShadow`: same syntax on web, iOS and Android). */
+export const elevation = {
+  base: 'none',
+  raised: '0 10px 24px -14px rgba(0,0,0,0.6)',
+  // Light from above: a hairline highlight on the top edge plus a soft drop.
+  featured: `inset 0 1px 0 rgba(${rgb('#F4F1EA')},0.07), 0 24px 48px -20px rgba(0,0,0,0.75)`,
+} as const satisfies Record<SurfaceLevel, string>;
+
+/**
+ * Controlled light for featured surfaces: one glow per card, at most two per
+ * screen. CSS radial gradients (`backgroundImage`): no images, no SVG.
+ */
+export const glows = {
+  petrol: `radial-gradient(ellipse 90% 80% at 0% 0%, rgba(${rgb(colors.petrolBright)},0.75), rgba(${rgb(colors.petrolBright)},0))`,
+  orange: `radial-gradient(ellipse 70% 70% at 100% 0%, rgba(${rgb(colors.orange)},0.22), rgba(${rgb(colors.orange)},0))`,
+  gold: `radial-gradient(ellipse 70% 70% at 100% 0%, rgba(${rgb(colors.gold)},0.18), rgba(${rgb(colors.gold)},0))`,
+} as const;
+
+export type GlowTone = keyof typeof glows;
+
+/* ------------------------------------------------------------------ */
+/* Sport identity                                                      */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Each sport family has an accent (brand palette only) and a line motif, so
+ * sports are told apart by shape as well as color (color-blind safe).
+ * `accentLight` is the brand color lifted for text/lines on dark surfaces.
+ */
+export const sportFamilies = {
+  combat: { label: 'Dövüş', accent: brand.orange, accentLight: '#FF8A5C', motif: 'strike' },
+  strength: { label: 'Kuvvet', accent: brand.gold, accentLight: '#E2C893', motif: 'plates' },
+  endurance: { label: 'Dayanıklılık', accent: '#0D5A52', accentLight: '#3E9C8F', motif: 'flow' },
+  team: { label: 'Takım', accent: brand.gold, accentLight: '#E2C893', motif: 'field' },
+  racket: { label: 'Raket', accent: brand.orange, accentLight: '#FF8A5C', motif: 'court' },
+} as const;
+
+export type SportFamily = keyof typeof sportFamilies;
+export type SportMotif = (typeof sportFamilies)[SportFamily]['motif'];
+
+/** Badge tiers: three shades of the champagne-gold family. */
+export const badgeTiers = {
+  bronze: { label: 'Bronz', ring: '#A9784C', ringLight: '#D19B6A', face: '#2A1C12' },
+  silver: { label: 'Gümüş', ring: '#BDB6A6', ringLight: '#E6E0D2', face: '#1E201F' },
+  gold: { label: 'Altın', ring: brand.gold, ringLight: '#F0DDB0', face: '#2B2414' },
+} as const;
+
+export type BadgeTier = keyof typeof badgeTiers;

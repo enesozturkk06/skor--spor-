@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Animated from 'react-native-reanimated';
 
 import { enter, fadeIn } from '@/components/motion/entrance';
@@ -97,8 +98,8 @@ export default function ExerciseLibraryScreen() {
                     ? `${MUSCLES[muscle.id].tr} · ${MUSCLES[muscle.id].en}`
                     : MUSCLE_GROUPS.find((g) => g.id === muscle.id)!.label}
                 </AppText>
-                <Pressable accessibilityRole="button" accessibilityLabel="Kas filtresini kaldır" hitSlop={10} onPress={() => setMuscle(null)}>
-                  <Icon name="close-circle" size={18} color="textMuted" />
+                <Pressable accessibilityRole="button" accessibilityLabel="Kas filtresini kaldır" onPress={() => setMuscle(null)} style={styles.touchIcon}>
+                  <Icon name="close-circle-outline" size={18} color="textMuted" />
                 </Pressable>
               </Animated.View>
             ) : null}
@@ -110,7 +111,7 @@ export default function ExerciseLibraryScreen() {
         <AppText variant="overline" color="textMuted">
           Kas grubu
         </AppText>
-        <ChipRow>
+        <ChipRow wrap={wide}>
           {MUSCLE_GROUPS.map((g) => (
             <Chip
               key={g.id}
@@ -123,7 +124,7 @@ export default function ExerciseLibraryScreen() {
         <AppText variant="overline" color="textMuted">
           Branş
         </AppText>
-        <ChipRow>
+        <ChipRow wrap={wide}>
           {sports.map((s) => (
             <Chip
               key={s.id}
@@ -146,7 +147,7 @@ export default function ExerciseLibraryScreen() {
           {filtered ? `${results.length} / ${EXERCISES.length} egzersiz` : `${EXERCISES.length} egzersiz`}
         </AppText>
         {filtered ? (
-          <Pressable accessibilityRole="button" onPress={clearAll} hitSlop={10}>
+          <Pressable accessibilityRole="button" onPress={clearAll} style={styles.touchText}>
             <AppText variant="smallStrong" color="orange">
               Filtreleri temizle
             </AppText>
@@ -206,11 +207,45 @@ const rank = (mine: SportId[], id: SportId) => {
   return i === -1 ? 99 : i;
 };
 
-function ChipRow({ children }: { children: ReactNode }) {
+/**
+ * Filter chips. Wide layouts wrap them onto several lines (never cut off at
+ * the column edge); phones scroll them sideways, with a soft fade on the
+ * right edge while more chips are hidden there.
+ */
+function ChipRow({ children, wrap }: { children: ReactNode; wrap: boolean }) {
+  const [box, setBox] = useState(0);
+  const [content, setContent] = useState(0);
+  const [atEnd, setAtEnd] = useState(false);
+  if (wrap) return <View style={[styles.chips, styles.chipsWrap]}>{children}</View>;
+  const more = content > box + 1 && !atEnd;
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips} style={styles.chipScroll}>
-      {children}
-    </ScrollView>
+    <View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.chips}
+        style={styles.chipScroll}
+        onLayout={(e) => setBox(e.nativeEvent.layout.width)}
+        onContentSizeChange={(w) => setContent(w)}
+        onScroll={(e) => {
+          const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+          setAtEnd(contentOffset.x + layoutMeasurement.width >= contentSize.width - 4);
+        }}
+        scrollEventThrottle={32}
+      >
+        {children}
+      </ScrollView>
+      {more ? (
+        <LinearGradient
+          pointerEvents="none"
+          colors={['rgba(8,13,13,0)', colors.bg]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.chipFade}
+          testID="chip-scroll-hint"
+        />
+      ) : null}
+    </View>
   );
 }
 
@@ -237,6 +272,11 @@ const styles = StyleSheet.create({
   filterBlock: { gap: spacing.sm },
   chipScroll: { marginHorizontal: -layout.gutter, flexGrow: 0 },
   chips: { gap: spacing.sm, paddingHorizontal: layout.gutter, paddingBottom: spacing.xs },
+  chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 0 },
+  chipFade: { position: 'absolute', top: 0, bottom: 0, right: -layout.gutter, width: 40 },
+  // 44 px touch targets for the small filter controls.
+  touchIcon: { width: layout.minTouch, height: layout.minTouch, alignItems: 'center', justifyContent: 'center', marginVertical: -13, marginRight: -13 },
+  touchText: { minHeight: layout.minTouch, justifyContent: 'center', paddingLeft: spacing.sm, marginVertical: -13 },
   resultsHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   empty: { alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.lg },
 });

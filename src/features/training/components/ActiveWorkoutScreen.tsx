@@ -8,7 +8,7 @@ import { PressableScale } from '@/components/motion/PressableScale';
 import { AppText, Button, Icon, Screen } from '@/components/ui';
 import { getSport } from '@/features/athlete/catalog';
 import { haptics } from '@/lib/haptics';
-import { colors, radius, spacing } from '@/theme';
+import { colors, layout, radius, spacing } from '@/theme';
 import { duration, pressScale } from '@/theme/motion';
 
 import { previousPerformance } from '../previous';
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   fullWidth: { alignSelf: 'stretch' },
   top: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: spacing.md },
-  iconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  iconBtn: { width: layout.minTouch, height: layout.minTouch, alignItems: 'center', justifyContent: 'center' },
   titles: { flex: 1, minWidth: 0 },
   hero: {
     alignItems: 'center',

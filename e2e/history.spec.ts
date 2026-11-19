@@ -111,7 +111,8 @@ test.describe('Antrenman geçmişi', () => {
       { start: daysAgo(45), minutes: 40, name: 'Eski seans' },
     ]);
     await app.tab('Antrenman').click();
-    await app.button('Geçmiş').click();
+    // Two "Geçmiş" controls lead to /history (dashboard link, training card); use the training one.
+    await page.getByTestId('training-history-button').filter({ visible: true }).click();
     const summary = v(page, 'history-summary');
     await expect(summary).toHaveText('3 antrenman · 120 dk · 10 set');
     await app.checkbox('30 gün').click();

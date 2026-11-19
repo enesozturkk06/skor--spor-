@@ -7,7 +7,8 @@ import { AnimatedNumber } from '@/components/motion/AnimatedNumber';
 import { PressableScale } from '@/components/motion/PressableScale';
 import { fadeIn } from '@/components/motion/entrance';
 import { AppText, Card, Tag } from '@/components/ui';
-import { colors, gradients, radius, spacing } from '@/theme';
+import { BAR_COLORS, barHeight, barScaleMax } from '@/components/viz/bar-scale';
+import { colors, radius, spacing } from '@/theme';
 import { pressScale, timing } from '@/theme/motion';
 
 import type { WeekDay } from '../dashboard-data';
@@ -25,8 +26,8 @@ function Bar({ height, index, selected, empty }: { height: number; index: number
   const grow = useAnimatedStyle(() => ({ height: h.get() }));
 
   return (
-    <Animated.View style={[styles.bar, { backgroundColor: empty ? colors.dataTrack : colors.petrolBright }, grow]}>
-      {selected ? <LinearGradient colors={gradients.orange} style={StyleSheet.absoluteFill} /> : null}
+    <Animated.View style={[styles.bar, { backgroundColor: empty ? BAR_COLORS.empty : BAR_COLORS.filled }, grow]}>
+      {selected ? <LinearGradient colors={BAR_COLORS.highlight} style={StyleSheet.absoluteFill} /> : null}
     </Animated.View>
   );
 }
@@ -38,9 +39,9 @@ type Props = { week: WeekDay[]; dailyTarget: number; isSample?: boolean };
  * its value (today is selected by default). Every bar is an accessible button.
  */
 export function WeeklyActivityChart({ week, dailyTarget, isSample = false }: Props) {
-  const max = Math.max(dailyTarget, ...week.map((d) => d.minutes)) * 1.15;
+  const max = barScaleMax(week.map((d) => d.minutes), dailyTarget, 1.15);
   const total = week.reduce((s, d) => s + d.minutes, 0);
-  const targetY = (dailyTarget / max) * CHART_HEIGHT;
+  const targetY = barHeight(dailyTarget, max, CHART_HEIGHT);
   const todayIndex = Math.max(0, week.findIndex((d) => d.isToday));
   const [selected, setSelected] = useState(todayIndex);
 
@@ -72,7 +73,7 @@ export function WeeklyActivityChart({ week, dailyTarget, isSample = false }: Pro
       <View style={styles.chart}>
         <View style={[styles.targetLine, { bottom: targetY }]} pointerEvents="none" />
         {week.map((d, i) => {
-          const h = d.isFuture ? 4 : Math.max(4, (d.minutes / max) * CHART_HEIGHT);
+          const h = d.isFuture ? 4 : Math.max(4, barHeight(d.minutes, max, CHART_HEIGHT));
           const isSelected = i === selected && !d.isFuture;
           return (
             <PressableScale

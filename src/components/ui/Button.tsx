@@ -21,6 +21,7 @@ type ButtonProps = {
   size?: 'md' | 'lg';
   style?: StyleProp<ViewStyle>;
   accessibilityHint?: string;
+  testID?: string;
 };
 
 export function Button({
@@ -34,6 +35,7 @@ export function Button({
   size = 'lg',
   style,
   accessibilityHint,
+  testID,
 }: ButtonProps) {
   const inactive = disabled || loading;
   const fg = variant === 'primary' ? 'textOnOrange' : variant === 'danger' ? 'danger' : 'text';
@@ -62,6 +64,7 @@ export function Button({
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityHint={accessibilityHint}
+      testID={testID}
       aria-disabled={inactive}
       aria-busy={loading}
       disabled={inactive}

@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { AppText, Icon, Screen } from '@/components/ui';
 import { ModulePreview } from '@/features/modules/ModulePreview';
 import { MODULES, isModuleId } from '@/features/modules/modules';
-import { radius, spacing } from '@/theme';
+import { layout, radius, spacing } from '@/theme';
 
 export default function ModuleScreen() {
   const router = useRouter();
@@ -40,5 +40,5 @@ export default function ModuleScreen() {
 
 const styles = StyleSheet.create({
   nav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.xl },
-  back: { width: 40, height: 40, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
+  back: { width: layout.minTouch, height: layout.minTouch, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
 });

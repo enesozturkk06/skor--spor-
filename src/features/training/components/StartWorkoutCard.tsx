@@ -4,6 +4,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { PressableScale } from '@/components/motion/PressableScale';
 import { AppText, Button, Card, Chip, Icon, Tag } from '@/components/ui';
+import { APP_ICONS } from '@/components/ui/icon-system';
 import { getSport, type SportId } from '@/features/athlete/catalog';
 import { useAthlete } from '@/features/athlete/AthleteProvider';
 import { colors, layout, radius, spacing } from '@/theme';
@@ -34,7 +35,7 @@ export function StartWorkoutCard() {
       {t.active ? (
         <Card variant="hero" accent="orange" onPress={() => router.push('/workout')} accessibilityLabel="Devam eden antrenmana dön">
           <View style={styles.inner} testID="resume-card">
-            <Tag label={t.active.pausedAt ? 'Duraklatıldı' : 'Devam ediyor'} tone="orange" icon={t.active.pausedAt ? 'pause' : 'lightning-bolt'} />
+            <Tag label={t.active.pausedAt ? 'Duraklatıldı' : 'Devam ediyor'} tone="orange" icon={t.active.pausedAt ? 'pause' : APP_ICONS.training.outline} />
             <AppText variant="h1">{t.active.name}</AppText>
             <ActiveSummary />
             <Button label="Antrenmana dön" icon="play" onPress={() => router.push('/workout')} />
@@ -75,7 +76,7 @@ export function StartWorkoutCard() {
       ) : null}
       {last ? <LastWorkout entry={last} onPress={() => router.push({ pathname: '/history/[id]', params: { id: last.id } })} /> : null}
       <View style={styles.links}>
-        <Button label="Geçmiş" icon="calendar-check" variant="secondary" size="md" style={styles.flex} onPress={() => router.push('/history')} />
+        <Button label="Geçmiş" icon="calendar-check-outline" variant="secondary" size="md" style={styles.flex} onPress={() => router.push('/history')} testID="training-history-button" />
         <Button label="Rekorlar" icon="trophy-outline" variant="secondary" size="md" style={styles.flex} onPress={() => router.push('/records')} />
       </View>
     </View>
@@ -98,7 +99,7 @@ function LastWorkout({ entry, onPress }: { entry: WorkoutEntry; onPress: () => v
   return (
     <PressableScale scaleTo={pressScale.card} haptic="tap" accessibilityRole="button" accessibilityLabel={"Son antrenman: " + entry.name} onPress={onPress} style={styles.last} testID="last-workout">
       <View style={styles.lastIcon}>
-        <Icon name="calendar-check" size={20} color="orange" />
+        <Icon name="calendar-check-outline" size={20} color="orange" />
       </View>
       <View style={styles.flex}>
         <AppText variant="overline" color="textMuted">

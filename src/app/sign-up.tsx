@@ -5,6 +5,7 @@ import type { TextInputInstance } from 'react-native';
 import { AppText, Button, TextField } from '@/components/ui';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { AuthShell } from '@/features/auth/components/AuthShell';
+import { AuthSwitch } from '@/features/auth/components/AuthSwitch';
 import { FormError } from '@/features/auth/components/FormError';
 import { validate } from '@/lib/validation';
 
@@ -47,12 +48,7 @@ export default function SignUpScreen() {
       subtitle="Birkaç adımda sana özel performans panelini kuralım."
       footer={
         <>
-          <AppText variant="small" color="textMuted">
-            Zaten hesabın var mı?{' '}
-            <AppText variant="smallStrong" color="orange" accessibilityRole="link" onPress={() => router.replace('/sign-in')}>
-              Giriş yap
-            </AppText>
-          </AppText>
+          <AuthSwitch prompt="Zaten hesabın var mı?" action="Giriş yap" onPress={() => router.replace('/sign-in')} />
           <AppText variant="small" color="textFaint" align="center">
             Devam ederek Kullanım Koşulları ve Gizlilik Politikası&apos;nı kabul etmiş olursun.
           </AppText>

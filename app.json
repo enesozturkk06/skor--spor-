@@ -7,6 +7,11 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "ios": {
+      "icon": {
+        "light": "./assets/icon.png",
+        "dark": "./assets/icon-dark.png",
+        "tinted": "./assets/icon-tinted.png"
+      },
       "supportsTablet": true,
       "bundleIdentifier": "com.skorspor.app",
       "infoPlist": {
@@ -24,6 +29,7 @@
       "package": "com.skorspor.app"
     },
     "web": {
+      "lang": "tr",
       "favicon": "./assets/favicon.png",
       "output": "single",
       "bundler": "metro"

@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View, useWindowDimensions } from 'react-native';
 import Animated, {
   Easing,
   cancelAnimation,
@@ -15,7 +15,7 @@ import { PressableScale } from '@/components/motion/PressableScale';
 import { AppText, Icon, LogoMark } from '@/components/ui';
 import { getSport, type SportId } from '@/features/athlete/catalog';
 import { firstName, initials } from '@/lib/format';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { colors, fonts, layout, radius, spacing } from '@/theme';
 import { pressScale } from '@/theme/motion';
 
 import { greeting } from '../dashboard-data';
@@ -66,6 +66,14 @@ export function DashboardHeader({ name, primarySport, onRefresh, refreshing = fa
   const router = useRouter();
   const sport = getSport(primarySport);
   const today = new Date().toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long' });
+  const { width } = useWindowDimensions();
+  const hello = greeting();
+  const first = firstName(name);
+  // Narrow phones: step the heading down instead of cutting the name off ("İYİ GECELER, DE…").
+  const length = hello.length + 2 + first.length;
+  const compact = width < 420;
+  const size = compact && length > 22 ? 24 : compact && length > 15 ? 28 : 32;
+  const greetingSize = size === 32 ? null : { fontSize: size, lineHeight: size + 2 };
 
   return (
     <View style={styles.row}>
@@ -76,8 +84,8 @@ export function DashboardHeader({ name, primarySport, onRefresh, refreshing = fa
             {today}
           </AppText>
         </View>
-        <AppText variant="h1" numberOfLines={1}>
-          {greeting()}, <AppText variant="h1" color="orange">{firstName(name)}</AppText>
+        <AppText variant="h1" numberOfLines={2} style={greetingSize} testID="dashboard-greeting">
+          {hello}, <AppText variant="h1" color="orange" style={greetingSize}>{first}</AppText>
         </AppText>
         <View style={styles.sport}>
           <Icon name={sport.icon} size={14} color="gold" />
@@ -110,8 +118,8 @@ const styles = StyleSheet.create({
   sport: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   iconButton: {
-    width: 40,
-    height: 40,
+    width: layout.minTouch,
+    height: layout.minTouch,
     borderRadius: radius.pill,
     alignItems: 'center',
     justifyContent: 'center',

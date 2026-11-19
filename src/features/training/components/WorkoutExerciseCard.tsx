@@ -7,7 +7,7 @@ import { PressableScale } from '@/components/motion/PressableScale';
 import { AppText, Icon } from '@/components/ui';
 import { getExercise } from '@/features/exercises/catalog';
 import { MUSCLES } from '@/features/exercises/muscles';
-import { colors, radius, spacing } from '@/theme';
+import { colors, layout, radius, spacing } from '@/theme';
 import { pressScale } from '@/theme/motion';
 
 import { describeSet, previousFill, type PreviousPerformance } from '../previous';
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
   },
   badgeText: { fontSize: 22 },
   titles: { flex: 1, minWidth: 0, gap: 2 },
-  iconBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  iconBtn: { width: layout.minTouch, height: layout.minTouch, alignItems: 'center', justifyContent: 'center' },
   prev: {
     flexDirection: 'row',
     alignItems: 'center',

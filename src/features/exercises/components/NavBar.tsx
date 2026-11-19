@@ -2,7 +2,7 @@ import { useRouter, type Href } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText, Icon } from '@/components/ui';
-import { radius, spacing } from '@/theme';
+import { layout, radius, spacing } from '@/theme';
 
 /** Back button + overline; falls back to `fallback` when there is no history (deep link). */
 export function NavBar({ overline, fallback = '/' }: { overline: string; fallback?: Href }) {
@@ -28,5 +28,5 @@ export function NavBar({ overline, fallback = '/' }: { overline: string; fallbac
 
 const styles = StyleSheet.create({
   nav: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.lg },
-  btn: { width: 40, height: 40, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
+  btn: { width: layout.minTouch, height: layout.minTouch, borderRadius: radius.pill, alignItems: 'center', justifyContent: 'center' },
 });

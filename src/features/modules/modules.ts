@@ -1,4 +1,5 @@
 import type { IconName } from '@/components/ui';
+import { APP_ICONS } from '@/components/ui/icon-system';
 
 export type ModuleId =
   | 'home'
@@ -26,30 +27,30 @@ export type AppModule = {
 };
 
 export const MODULES: Record<ModuleId, AppModule> = {
-  home: { id: 'home', title: 'Ana Sayfa', tagline: 'Günün özeti', icon: 'home-variant', tabRoute: '/', status: 'live', roadmap: [] },
+  home: { id: 'home', title: 'Ana Sayfa', tagline: 'Günün özeti', icon: APP_ICONS.home.outline, tabRoute: '/', status: 'live', roadmap: [] },
   training: {
     id: 'training',
     title: 'Antrenman',
     tagline: 'Plan, kayıt ve ilerleme',
-    icon: 'lightning-bolt',
+    icon: APP_ICONS.training.outline,
     tabRoute: '/training',
-    status: 'soon',
-    roadmap: ['Branşına özel antrenman programları', 'Set, tekrar ve ağırlık kaydı', 'Dinlenme zamanlayıcısı', 'Geçmiş ve kişisel rekorlar'],
+    status: 'live',
+    roadmap: [],
   },
   exercises: {
     id: 'exercises',
     title: 'Egzersiz Kütüphanesi',
     tagline: 'Teknik, kas haritası, set önerisi',
-    icon: 'bookshelf',
+    icon: APP_ICONS.exercises.outline,
     route: '/exercises',
     status: 'live',
-    roadmap: ['Kas grubu ve ekipmana göre filtre', 'Adım adım teknik anlatımı', 'Dövüş sporları kombinasyon kütüphanesi', 'Favoriler ve kendi egzersizlerin'],
+    roadmap: [],
   },
   nutrition: {
     id: 'nutrition',
     title: 'Beslenme',
     tagline: 'Kalori ve makro takibi',
-    icon: 'food-apple',
+    icon: APP_ICONS.nutrition.outline,
     tabRoute: '/nutrition',
     status: 'soon',
     roadmap: ['Günlük kalori ve makro hedefi', 'Öğün kaydı ve besin arama', 'Su takibi', 'Hedefe göre beslenme önerileri'],
@@ -58,7 +59,7 @@ export const MODULES: Record<ModuleId, AppModule> = {
     id: 'coach',
     title: 'Yapay Zekâ Koçu',
     tagline: 'Kişisel performans asistanı',
-    icon: 'brain',
+    icon: APP_ICONS.coach.outline,
     tabRoute: '/coach',
     status: 'soon',
     roadmap: ['Profiline göre program oluşturma', 'Antrenman sonrası geri bildirim', 'Beslenme ve toparlanma tavsiyeleri', 'Soru-cevap sohbet'],
@@ -67,7 +68,7 @@ export const MODULES: Record<ModuleId, AppModule> = {
     id: 'recovery',
     title: 'Recovery',
     tagline: 'Uyku, yorgunluk, hazırlık',
-    icon: 'heart-pulse',
+    icon: APP_ICONS.recovery.outline,
     status: 'soon',
     roadmap: ['Günlük hazırlık skoru', 'Uyku ve dinlenik nabız kaydı', 'Mobilite ve esneme rutinleri', 'Aşırı yüklenme uyarıları'],
   },
@@ -75,7 +76,7 @@ export const MODULES: Record<ModuleId, AppModule> = {
     id: 'performance',
     title: 'Performans Analizi',
     tagline: 'Trendler ve kıyaslar',
-    icon: 'chart-line',
+    icon: APP_ICONS.performance.outline,
     status: 'soon',
     roadmap: ['Athlete Score geçmişi', 'Güç, hız ve dayanıklılık testleri', 'Haftalık / aylık raporlar', 'Hedef ilerleme analizi'],
   },
@@ -83,11 +84,11 @@ export const MODULES: Record<ModuleId, AppModule> = {
     id: 'community',
     title: 'Topluluk',
     tagline: 'Sporcularla bağlan',
-    icon: 'account-group',
+    icon: APP_ICONS.community.outline,
     status: 'soon',
     roadmap: ['Branş toplulukları', 'Meydan okumalar ve sıralamalar', 'Antrenman paylaşımı', 'Koç ve kulüp profilleri'],
   },
-  profile: { id: 'profile', title: 'Profil', tagline: 'Sporcu kimliğin', icon: 'account-circle-outline', tabRoute: '/profile', status: 'live', roadmap: [] },
+  profile: { id: 'profile', title: 'Profil', tagline: 'Sporcu kimliğin', icon: APP_ICONS.profile.outline, tabRoute: '/profile', status: 'live', roadmap: [] },
 };
 
 export const isModuleId = (v: unknown): v is ModuleId => typeof v === 'string' && v in MODULES;
