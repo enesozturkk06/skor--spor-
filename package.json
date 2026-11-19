@@ -60,7 +60,8 @@
     "db:status": "supabase migration list --remote",
     "db:push:dry": "supabase db push --remote --dry-run",
     "test:e2e:supabase": "playwright test --project=supabase-mock",
-    "fonts:build": "node scripts/build-fonts.mjs"
+    "fonts:build": "node scripts/build-fonts.mjs",
+    "icons:build": "node scripts/build-icons.mjs"
   },
   "private": true
 }
